@@ -1,0 +1,516 @@
+@import "tailwindcss";
+@import "galmuri/dist/galmuri.css";
+@import "@fontsource/press-start-2p";
+
+@theme {
+  --color-dungeon-deepest: #050309;
+  --color-dungeon-deep: #0e0613;
+  --color-dungeon-stone: #1a121f;
+  --color-dungeon-mid: #2a1f33;
+
+  --color-torch-core: #ffd58a;
+  --color-torch-flame: #ff7a3a;
+  --color-torch-glow: #ff4d1a;
+  --color-torch-deep: #cc2200;
+
+  --color-blood-red: #c41e1e;
+  --color-bone-white: #ece2c8;
+  --color-ash-grey: #9a8da3;
+
+  --color-class-sword: #ff6b6b;
+  --color-class-bow: #6bd96b;
+  --color-class-mage: #c47aff;
+  --color-class-cleric: #ffe066;
+
+  --color-rune-cyan: #6effe0;
+  --color-rune-violet: #c47aff;
+
+  --font-pixel-ko: "Galmuri11", monospace;
+  --font-pixel-en: "Press Start 2P", "Galmuri11", monospace;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-dungeon-deepest);
+  color: var(--color-bone-white);
+  font-family: var(--font-pixel-ko);
+  overflow: hidden;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+img,
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ─── Dungeon wall (subtle shading, no grid) ────────────────────────────── */
+
+.stone-wall {
+  background-color: #0a0610;
+  background-image:
+    radial-gradient(
+      ellipse at 30% 30%,
+      rgba(40, 25, 55, 0.55) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 70% 70%,
+      rgba(28, 16, 38, 0.6) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(18, 10, 26, 0.4) 0%,
+      transparent 70%
+    );
+}
+
+/* ─── Torch ─────────────────────────────────────────────────────────────── */
+
+@keyframes torch-flicker {
+  0%,
+  100% {
+    opacity: 0.95;
+    filter: blur(6px) brightness(1);
+  }
+  18% {
+    opacity: 0.72;
+    filter: blur(8px) brightness(0.85);
+  }
+  36% {
+    opacity: 1;
+    filter: blur(5px) brightness(1.15);
+  }
+  54% {
+    opacity: 0.82;
+    filter: blur(7px) brightness(0.9);
+  }
+  72% {
+    opacity: 1;
+    filter: blur(6px) brightness(1.05);
+  }
+}
+
+.torch-glow {
+  position: absolute;
+  width: 720px;
+  height: 720px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 213, 138, 0.85) 0%,
+    rgba(255, 122, 58, 0.55) 15%,
+    rgba(255, 77, 26, 0.25) 32%,
+    rgba(204, 34, 0, 0.08) 50%,
+    transparent 70%
+  );
+  animation: torch-flicker 1.3s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+/* ─── Torch flame layers (multi-layer flicker) ──────────────────────────── */
+
+@keyframes flame-flicker-outer {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1) translateY(0);
+    opacity: 0.75;
+  }
+  25% {
+    transform: scaleY(0.9) scaleX(1.08) translateY(1px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scaleY(1.1) scaleX(0.92) translateY(-1px);
+    opacity: 0.85;
+  }
+  75% {
+    transform: scaleY(0.95) scaleX(1.04) translateY(0.5px);
+    opacity: 0.7;
+  }
+}
+
+@keyframes flame-flicker-mid {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1) translateY(0);
+    opacity: 1;
+  }
+  30% {
+    transform: scaleY(1.08) scaleX(0.94) translateY(-1px);
+    opacity: 0.92;
+  }
+  60% {
+    transform: scaleY(0.94) scaleX(1.06) translateY(1px);
+    opacity: 1;
+  }
+}
+
+@keyframes flame-flicker-inner {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 1;
+  }
+  20% {
+    transform: scaleY(1.12) scaleX(0.88);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scaleY(0.88) scaleX(1.1);
+    opacity: 1;
+  }
+  80% {
+    transform: scaleY(1.05) scaleX(0.95);
+    opacity: 0.92;
+  }
+}
+
+@keyframes flame-flicker-core {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.7;
+  }
+}
+
+.flame-layer {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.flame-outer {
+  animation: flame-flicker-outer 0.42s ease-in-out infinite;
+  filter: blur(0.4px);
+}
+.flame-mid {
+  animation: flame-flicker-mid 0.35s ease-in-out infinite;
+}
+.flame-inner {
+  animation: flame-flicker-inner 0.28s ease-in-out infinite;
+}
+.flame-core {
+  animation: flame-flicker-core 0.22s ease-in-out infinite;
+}
+
+/* ─── Floating embers ───────────────────────────────────────────────────── */
+
+@keyframes ember-rise {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(var(--ember-drift, 0), -42px);
+    opacity: 0;
+  }
+}
+
+.ember {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #ffd58a;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #ff7a3a;
+  pointer-events: none;
+  animation: ember-rise 2.4s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ─── Title glow ────────────────────────────────────────────────────────── */
+
+@keyframes title-pulse {
+  0%,
+  100% {
+    text-shadow:
+      0 0 12px rgba(255, 213, 138, 0.5),
+      0 0 28px rgba(255, 122, 58, 0.4),
+      0 0 56px rgba(255, 77, 26, 0.25);
+  }
+  50% {
+    text-shadow:
+      0 0 18px rgba(255, 213, 138, 0.75),
+      0 0 40px rgba(255, 122, 58, 0.6),
+      0 0 80px rgba(255, 77, 26, 0.4);
+  }
+}
+
+.title-glow {
+  animation: title-pulse 3s ease-in-out infinite;
+  text-shadow:
+    0 0 12px rgba(255, 213, 138, 0.55),
+    0 0 28px rgba(255, 122, 58, 0.4);
+}
+
+/* ─── Floating animation ────────────────────────────────────────────────── */
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.float-y {
+  animation: float-y 2.6s ease-in-out infinite;
+}
+
+@keyframes merc-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.merc-bob {
+  animation: merc-bob 1.8s ease-in-out infinite;
+}
+
+/* ─── Pixel button ──────────────────────────────────────────────────────── */
+
+.pixel-btn {
+  position: relative;
+  padding: 12px 32px;
+  border: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(40, 28, 48, 0.95) 0%,
+    rgba(20, 12, 28, 0.95) 100%
+  );
+  color: var(--color-bone-white);
+  font-family: var(--font-pixel-ko);
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.12s ease-out;
+  /* outer pixel frame using box-shadow stack */
+  box-shadow:
+    /* outer border (bone) */
+    0 0 0 2px rgba(236, 226, 200, 0.35),
+    /* inner highlight (top-left) */ inset 2px 2px 0 rgba(236, 226, 200, 0.12),
+    /* inner shadow (bottom-right) */ inset -2px -2px 0 rgba(0, 0, 0, 0.55);
+}
+
+.pixel-btn:hover,
+.pixel-btn:focus-visible,
+.pixel-btn.is-selected {
+  outline: none;
+  color: var(--color-torch-core);
+  background: linear-gradient(
+    to bottom,
+    rgba(60, 30, 35, 0.95) 0%,
+    rgba(35, 15, 18, 0.95) 100%
+  );
+  box-shadow:
+    0 0 0 2px var(--color-torch-flame),
+    inset 2px 2px 0 rgba(255, 213, 138, 0.25),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(255, 122, 58, 0.5);
+  transform: translateY(-1px);
+}
+
+.pixel-btn-primary {
+  background: linear-gradient(
+    to bottom,
+    rgba(120, 50, 30, 0.95) 0%,
+    rgba(60, 22, 14, 0.95) 100%
+  );
+  box-shadow:
+    0 0 0 2px var(--color-torch-flame),
+    inset 2px 2px 0 rgba(255, 213, 138, 0.3),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(255, 122, 58, 0.35);
+  color: var(--color-bone-white);
+}
+
+.pixel-btn-primary:hover,
+.pixel-btn-primary:focus-visible,
+.pixel-btn-primary.is-selected {
+  background: linear-gradient(
+    to bottom,
+    rgba(160, 70, 40, 0.95) 0%,
+    rgba(80, 30, 18, 0.95) 100%
+  );
+  box-shadow:
+    0 0 0 2px var(--color-torch-core),
+    inset 2px 2px 0 rgba(255, 233, 176, 0.4),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.55),
+    0 0 36px rgba(255, 122, 58, 0.7);
+  color: #fff;
+}
+
+.pixel-btn-chevron {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+  color: var(--color-torch-core);
+}
+
+.pixel-btn:hover .pixel-btn-chevron,
+.pixel-btn:focus-visible .pixel-btn-chevron,
+.pixel-btn.is-selected .pixel-btn-chevron {
+  opacity: 1;
+}
+
+@keyframes chevron-bob {
+  0%,
+  100% {
+    transform: translate(0, -50%);
+  }
+  50% {
+    transform: translate(3px, -50%);
+  }
+}
+
+.pixel-btn.is-selected .pixel-btn-chevron {
+  animation: chevron-bob 0.7s ease-in-out infinite;
+}
+
+/* ─── Intro fade-in cascade ─────────────────────────────────────────────── */
+
+@keyframes intro-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intro {
+  opacity: 0;
+  animation: intro-fade-up 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.intro-0 {
+  animation-delay: 0ms;
+}
+.intro-1 {
+  animation-delay: 120ms;
+}
+.intro-2 {
+  animation-delay: 260ms;
+}
+.intro-3 {
+  animation-delay: 380ms;
+}
+.intro-4 {
+  animation-delay: 480ms;
+}
+.intro-5 {
+  animation-delay: 580ms;
+}
+.intro-6 {
+  animation-delay: 680ms;
+}
+.intro-7 {
+  animation-delay: 800ms;
+}
+
+/* ─── Mercenary tooltip ─────────────────────────────────────────────────── */
+
+.merc-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  min-width: 160px;
+  padding: 10px 12px;
+  background: rgba(10, 6, 16, 0.97);
+  border: 2px solid rgba(236, 226, 200, 0.4);
+  box-shadow:
+    inset 1px 1px 0 rgba(236, 226, 200, 0.1),
+    0 0 0 2px rgba(0, 0, 0, 0.6),
+    0 4px 24px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.15s ease-out;
+  z-index: 20;
+  font-family: var(--font-pixel-ko);
+}
+
+.merc-tooltip::after {
+  /* Down-pointing arrow connecting to character */
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid rgba(236, 226, 200, 0.4);
+}
+
+.merc-tooltip-host:hover .merc-tooltip,
+.merc-tooltip-host:focus-within .merc-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Range slider ──────────────────────────────────────────────────────── */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(236, 226, 200, 0.15);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 18px;
+  background: var(--color-torch-flame);
+  border: 2px solid var(--color-bone-white);
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255, 122, 58, 0.6);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 18px;
+  background: var(--color-torch-flame);
+  border: 2px solid var(--color-bone-white);
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255, 122, 58, 0.6);
+}
