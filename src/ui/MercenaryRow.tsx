@@ -129,10 +129,7 @@ const MERCS: Mercenary[] = [
 
 export function MercenaryRow() {
   return (
-    <div
-      className="flex items-end justify-center gap-6 md:gap-10"
-      aria-label="용병 4종 미리보기"
-    >
+    <div className="flex items-end justify-center gap-6 md:gap-10" aria-label="용병 4종 미리보기">
       {MERCS.map((m) => (
         <div
           key={m.id}
@@ -142,31 +139,21 @@ export function MercenaryRow() {
           aria-label={`${m.label} — ${m.role}`}
         >
           <div className="merc-tooltip" role="tooltip">
-            <div
-              className="text-sm font-bold mb-1"
-              style={{ color: m.glow }}
-            >
+            <div className="text-sm font-bold mb-1" style={{ color: m.glow }}>
               {m.label}
             </div>
             <div className="text-[10px] text-ash-grey mb-2">{m.role}</div>
             <div className="space-y-0.5">
               {m.stats.map((s) => (
-                <div
-                  key={s.k}
-                  className="flex justify-between text-[11px] gap-3"
-                >
+                <div key={s.k} className="flex justify-between text-[11px] gap-3">
                   <span className="text-bone-white/65">{s.k}</span>
-                  <span className="text-bone-white font-pixel-en text-[10px]">
-                    {s.v}
-                  </span>
+                  <span className="text-bone-white font-pixel-en text-[10px]">{s.v}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div
-            className="relative w-12 h-16 md:w-14 md:h-20 flex items-center justify-center"
-          >
+          <div className="relative w-12 h-16 md:w-14 md:h-20 flex items-center justify-center">
             <div
               className="absolute inset-0 rounded-full"
               style={{

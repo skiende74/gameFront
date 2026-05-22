@@ -33,13 +33,7 @@ export function Torch({ side }: Props) {
         }}
       />
 
-      <svg
-        viewBox="0 0 32 100"
-        width="48"
-        height="100"
-        className="relative"
-        style={{ shapeRendering: "crispEdges" }}
-      >
+      <svg viewBox="0 0 32 100" width="48" height="100" className="relative" style={{ shapeRendering: "crispEdges" }}>
         <g fill="#0d0804">
           <rect x="2" y="44" width="3" height="14" />
           <rect x="5" y="44" width="1" height="14" fill="#241608" />
@@ -78,38 +72,26 @@ export function Torch({ side }: Props) {
           <rect x="14" y="34" width="7" height="1" fill="#1a0d04" />
         </g>
 
-        <g
-          className="flame-layer flame-outer"
-          style={{ animationDelay: offsetA }}
-        >
+        <g className="flame-layer flame-outer" style={{ animationDelay: offsetA }}>
           <path
             d="M 7 34 Q 4 22, 11 12 Q 14 18, 17 8 Q 20 18, 23 12 Q 30 22, 27 34 Q 24 28, 17 32 Q 10 28, 7 34 Z"
             fill="#cc2200"
             opacity="0.75"
           />
         </g>
-        <g
-          className="flame-layer flame-mid"
-          style={{ animationDelay: offsetB }}
-        >
+        <g className="flame-layer flame-mid" style={{ animationDelay: offsetB }}>
           <path
             d="M 10 34 Q 8 22, 14 14 Q 16 20, 17 12 Q 18 20, 20 14 Q 26 22, 24 34 Q 21 28, 17 32 Q 13 28, 10 34 Z"
             fill="#ff7a3a"
           />
         </g>
-        <g
-          className="flame-layer flame-inner"
-          style={{ animationDelay: offsetC }}
-        >
+        <g className="flame-layer flame-inner" style={{ animationDelay: offsetC }}>
           <path
             d="M 12 34 Q 11 24, 15 18 Q 17 22, 17 14 Q 17 22, 19 18 Q 23 24, 22 34 Q 19 30, 17 32 Q 15 30, 12 34 Z"
             fill="#ffd58a"
           />
         </g>
-        <g
-          className="flame-layer flame-core"
-          style={{ animationDelay: offsetB }}
-        >
+        <g className="flame-layer flame-core" style={{ animationDelay: offsetB }}>
           <ellipse cx="17" cy="26" rx="1.8" ry="3.5" fill="#fffce6" />
         </g>
       </svg>

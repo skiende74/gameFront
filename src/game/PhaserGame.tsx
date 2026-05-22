@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import { BootScene } from "./scenes/BootScene";
+import { PreloadScene } from "./scenes/PreloadScene";
+import { DungeonScene } from "./scenes/DungeonScene";
 import { GAME_WIDTH, GAME_HEIGHT, HEX } from "./config";
 
 export function PhaserGame() {
@@ -22,7 +23,14 @@ export function PhaserGame() {
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
       pixelArt: true,
-      scene: [BootScene],
+      physics: {
+        default: "arcade",
+        arcade: {
+          gravity: { x: 0, y: 0 },
+          debug: false,
+        },
+      },
+      scene: [PreloadScene, DungeonScene],
     });
 
     return () => {

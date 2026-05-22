@@ -44,31 +44,18 @@ export function SettingsModal({ open, onClose }: Props) {
     }
   }, [settings]);
 
-  const update =
-    (key: keyof Settings) => (e: ChangeEvent<HTMLInputElement>) => {
-      setSettings((s) => ({ ...s, [key]: clamp(Number(e.target.value)) }));
-    };
+  const update = (key: keyof Settings) => (e: ChangeEvent<HTMLInputElement>) => {
+    setSettings((s) => ({ ...s, [key]: clamp(Number(e.target.value)) }));
+  };
 
   const resetDefaults = () => setSettings(DEFAULTS);
 
   return (
     <Modal open={open} title="설정" onClose={onClose}>
       <div className="space-y-5">
-        <Slider
-          label="마스터 음량"
-          value={settings.master}
-          onChange={update("master")}
-        />
-        <Slider
-          label="효과음 (SFX)"
-          value={settings.sfx}
-          onChange={update("sfx")}
-        />
-        <Slider
-          label="배경 음악"
-          value={settings.music}
-          onChange={update("music")}
-        />
+        <Slider label="마스터 음량" value={settings.master} onChange={update("master")} />
+        <Slider label="효과음 (SFX)" value={settings.sfx} onChange={update("sfx")} />
+        <Slider label="배경 음악" value={settings.music} onChange={update("music")} />
         <div className="flex items-center justify-between pt-3 border-t border-bone-white/10">
           <span className="text-xs text-ash-grey">설정은 자동 저장됩니다.</span>
           <button
@@ -95,9 +82,7 @@ function Slider({ label, value, onChange }: SliderProps) {
     <label className="block">
       <div className="flex justify-between mb-2">
         <span className="text-sm">{label}</span>
-        <span className="text-sm text-torch-core tabular-nums font-pixel-en">
-          {String(value).padStart(3, "0")}
-        </span>
+        <span className="text-sm text-torch-core tabular-nums font-pixel-en">{String(value).padStart(3, "0")}</span>
       </div>
       <input
         type="range"

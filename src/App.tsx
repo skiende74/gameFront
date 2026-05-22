@@ -22,11 +22,7 @@ function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [screen]);
 
-  return screen === "title" ? (
-    <TitleScreen onStart={() => setScreen("game")} />
-  ) : (
-    <PhaserGame />
-  );
+  return screen === "title" ? <TitleScreen onStart={() => setScreen("game")} /> : <PhaserGame />;
 }
 
 export default App;

@@ -33,14 +33,10 @@ export function TutorialModal({ open, onClose }: Props) {
       <div className="space-y-4">
         {STEPS.map((s) => (
           <div key={s.n} className="flex gap-3">
-            <div className="font-pixel-en text-torch-flame text-sm pt-0.5 min-w-[28px]">
-              {s.n}
-            </div>
+            <div className="font-pixel-en text-torch-flame text-sm pt-0.5 min-w-[28px]">{s.n}</div>
             <div className="flex-1">
               <div className="text-sm text-bone-white">{s.title}</div>
-              <div className="text-xs text-ash-grey mt-1 leading-relaxed">
-                {s.desc}
-              </div>
+              <div className="text-xs text-ash-grey mt-1 leading-relaxed">{s.desc}</div>
             </div>
           </div>
         ))}

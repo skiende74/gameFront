@@ -117,10 +117,8 @@ export function TitleScreen({ onStart }: Props) {
           height: "min(95vh, 900px)",
           background:
             "radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.2) 55%, transparent 75%)",
-          maskImage:
-            "radial-gradient(ellipse at 50% 40%, black 35%, transparent 75%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse at 50% 40%, black 35%, transparent 75%)",
+          maskImage: "radial-gradient(ellipse at 50% 40%, black 35%, transparent 75%)",
+          WebkitMaskImage: "radial-gradient(ellipse at 50% 40%, black 35%, transparent 75%)",
         }}
       />
 
@@ -156,15 +154,10 @@ export function TitleScreen({ onStart }: Props) {
               <span>◆</span>
               <span className="inline-block h-px w-10 md:w-20 bg-torch-flame/50" />
             </div>
-            <div className="font-pixel-ko text-sm md:text-base text-bone-white/85">
-              무기가 아닌, 동료를 빌드하라
-            </div>
+            <div className="font-pixel-ko text-sm md:text-base text-bone-white/85">무기가 아닌, 동료를 빌드하라</div>
           </div>
 
-          <nav
-            className="flex flex-col items-stretch gap-2.5 w-full max-w-[280px]"
-            aria-label="메인 메뉴"
-          >
+          <nav className="flex flex-col items-stretch gap-2.5 w-full max-w-[280px]" aria-label="메인 메뉴">
             {items.map((item, i) => (
               <button
                 key={item.id}
