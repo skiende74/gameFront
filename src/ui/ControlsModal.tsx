@@ -4,7 +4,7 @@ type Props = { open: boolean; onClose: () => void };
 
 const ROWS: Array<{ keys: string; desc: string }> = [
   { keys: "W A S D", desc: "플레이어 이동 (8방향)" },
-  { keys: "↑ ↓ ← →", desc: "플레이어 이동 (방향키)" },
+  { keys: "▲ ▼ ◀ ▶", desc: "플레이어 이동 (방향키)" },
   { keys: "MOUSE", desc: "카드 선택 / 메뉴 조작" },
   { keys: "ESC", desc: "일시정지 / 모달 닫기" },
   { keys: "AUTO", desc: "공격 — 모든 용병이 자동" },
