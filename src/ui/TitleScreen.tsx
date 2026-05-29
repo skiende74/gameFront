@@ -130,7 +130,7 @@ export function TitleScreen({ onStart }: Props) {
           DACON Monthly Hackathon · Web Mini Game
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 md:gap-10 w-full">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 md:gap-9 w-full">
           <div className="intro intro-1 text-center float-y">
             <div
               className="font-pixel-en text-torch-flame/70 text-[8px] md:text-[10px] mb-2 flex items-center justify-center gap-2"
@@ -140,7 +140,7 @@ export function TitleScreen({ onStart }: Props) {
               <span>◆</span>
               <span className="inline-block h-px w-10 md:w-20 bg-torch-flame/50" />
             </div>
-            <h1 className="font-pixel-ko text-5xl md:text-8xl font-bold text-bone-white mb-2 title-glow tracking-wider">
+            <h1 className="font-pixel-ko text-5xl md:text-8xl font-bold text-bone-white mb-4 md:mb-5 title-glow tracking-wider">
               10분 용병단
             </h1>
             <div className="font-pixel-en text-[10px] md:text-sm text-torch-core tracking-[0.3em] mb-2">
@@ -180,18 +180,18 @@ export function TitleScreen({ onStart }: Props) {
               </button>
             ))}
           </nav>
-        </div>
 
-        <div className="flex flex-col items-center gap-3 mt-2">
-          <div className="intro intro-6">
-            <MercenaryRow />
-          </div>
-          <div className="intro intro-7 flex flex-col items-center gap-1">
-            <div className="text-[8px] md:text-[9px] text-ash-grey/55 font-pixel-en tracking-[0.2em] whitespace-nowrap">
-              [↑↓ / WS] 이동 · [ENTER] 선택 · [ESC] 닫기
+          <div className="flex flex-col items-center gap-3 -mt-6 md:-mt-10">
+            <div className="intro intro-6">
+              <MercenaryRow />
             </div>
-            <div className="text-[8px] md:text-[10px] text-ash-grey/65 font-pixel-en tracking-wider whitespace-nowrap">
-              v1.0 · 1 ROUND ≈ 10 MIN · 2026
+            <div className="intro intro-7 flex flex-col items-center gap-1">
+              <div className="text-[8px] md:text-[9px] text-ash-grey/55 font-pixel-en tracking-[0.2em] whitespace-nowrap">
+                [▲▼ / WS] 이동 · [ENTER] 선택 · [ESC] 닫기
+              </div>
+              <div className="text-[8px] md:text-[10px] text-ash-grey/65 font-pixel-en tracking-wider whitespace-nowrap">
+                v1.0 · 1 ROUND ≈ 10 MIN · 2026
+              </div>
             </div>
           </div>
         </div>

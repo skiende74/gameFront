@@ -8,12 +8,9 @@ type Mercenary = {
   glow: string;
   bobDelay: string;
   spriteUrl: string;
+  feetAdjust: string;
 };
 
-/**
- * Tiny RPG Character Asset Pack v1.03 — 6-frame idle 시트 (600×100).
- * `public/`에 있는 자산을 그대로 참조하며, CSS `steps(6)`로 시트 애니메이션을 재생한다.
- */
 const ASSET_BASE = "/assets/Tiny RPG Character Asset Pack v1.03 -Full 20 Characters/Characters(100x100)";
 
 const idleSprite = (folder: string, file: string) => encodeURI(`${ASSET_BASE}/${folder}/${folder}/${file}-Idle.png`);
@@ -31,6 +28,7 @@ const MERCS: Mercenary[] = [
     glow: "var(--color-class-sword)",
     bobDelay: "0s",
     spriteUrl: idleSprite("Swordsman", "Swordsman"),
+    feetAdjust: "0%",
   },
   {
     id: "bow",
@@ -44,6 +42,7 @@ const MERCS: Mercenary[] = [
     glow: "var(--color-class-bow)",
     bobDelay: "0.25s",
     spriteUrl: idleSprite("Archer", "Archer"),
+    feetAdjust: "3%",
   },
   {
     id: "mage",
@@ -57,6 +56,7 @@ const MERCS: Mercenary[] = [
     glow: "var(--color-class-mage)",
     bobDelay: "0.5s",
     spriteUrl: idleSprite("Wizard", "Wizard"),
+    feetAdjust: "2%",
   },
   {
     id: "cleric",
@@ -70,6 +70,7 @@ const MERCS: Mercenary[] = [
     glow: "var(--color-class-cleric)",
     bobDelay: "0.75s",
     spriteUrl: idleSprite("Priest", "Priest"),
+    feetAdjust: "2%",
   },
 ];
 
@@ -99,7 +100,7 @@ export function MercenaryRow() {
             </div>
           </div>
 
-          <div className="relative w-56 h-56 md:w-72 md:h-72 flex items-center justify-center">
+          <div className="relative w-[clamp(8rem,26vh,18rem)] h-[clamp(8rem,26vh,18rem)] flex items-center justify-center">
             <div
               className="absolute inset-0 rounded-full"
               style={{
@@ -113,6 +114,7 @@ export function MercenaryRow() {
                 {
                   "--merc-sprite": `url("${m.spriteUrl}")`,
                   filter: `drop-shadow(0 0 6px ${m.glow}aa)`,
+                  transform: `translateY(${m.feetAdjust})`,
                 } as CSSProperties
               }
               aria-hidden="true"
