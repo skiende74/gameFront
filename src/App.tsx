@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 import { TitleScreen } from "./ui/TitleScreen.tsx";
+import { CharacterSelectModal } from "./ui/CharacterSelectModal.tsx";
 import { PhaserGame } from "./game/PhaserGame.tsx";
 
 function TitlePage() {
@@ -10,8 +11,11 @@ function TitlePage() {
 
 function GamePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedClass = searchParams.get("class");
 
   useEffect(() => {
+    if (!selectedClass) return;
     const exitToTitle = () => navigate("/");
 
     const onExit = () => exitToTitle();
@@ -25,7 +29,35 @@ function GamePage() {
       window.removeEventListener("game:exit", onExit);
       window.removeEventListener("keydown", onKey);
     };
-  }, [navigate]);
+  }, [navigate, selectedClass]);
+
+  if (!selectedClass) {
+    return (
+      <div className="fixed inset-0 overflow-hidden bg-dungeon-deepest">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url(/assets/ui/select-bg.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            imageRendering: "pixelated",
+            filter: "brightness(0.85)",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "radial-gradient(ellipse at 50% 45%, rgba(5,3,9,0.25) 0%, rgba(5,3,9,0.88) 100%)",
+          }}
+        />
+        <CharacterSelectModal
+          open
+          onClose={() => navigate("/")}
+          onSelect={(classId) => setSearchParams({ class: classId }, { replace: true })}
+        />
+      </div>
+    );
+  }
 
   return <PhaserGame />;
 }
