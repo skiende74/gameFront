@@ -14,11 +14,9 @@ type Mercenary = {
  * Tiny RPG Character Asset Pack v1.03 — 6-frame idle 시트 (600×100).
  * `public/`에 있는 자산을 그대로 참조하며, CSS `steps(6)`로 시트 애니메이션을 재생한다.
  */
-const ASSET_BASE =
-  "/assets/Tiny RPG Character Asset Pack v1.03 -Full 20 Characters/Characters(100x100)";
+const ASSET_BASE = "/assets/Tiny RPG Character Asset Pack v1.03 -Full 20 Characters/Characters(100x100)";
 
-const idleSprite = (folder: string, file: string) =>
-  encodeURI(`${ASSET_BASE}/${folder}/${folder}/${file}-Idle.png`);
+const idleSprite = (folder: string, file: string) => encodeURI(`${ASSET_BASE}/${folder}/${folder}/${file}-Idle.png`);
 
 const MERCS: Mercenary[] = [
   {
@@ -81,7 +79,7 @@ export function MercenaryRow() {
       {MERCS.map((m) => (
         <div
           key={m.id}
-          className="merc-tooltip-host relative flex flex-col items-center gap-2 merc-bob cursor-help"
+          className="merc-tooltip-host relative flex flex-col items-center gap-0 merc-bob cursor-help"
           style={{ animationDelay: m.bobDelay }}
           tabIndex={0}
           aria-label={`${m.label} — ${m.role}`}
@@ -101,7 +99,7 @@ export function MercenaryRow() {
             </div>
           </div>
 
-          <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
+          <div className="relative w-56 h-56 md:w-72 md:h-72 flex items-center justify-center">
             <div
               className="absolute inset-0 rounded-full"
               style={{
@@ -121,7 +119,7 @@ export function MercenaryRow() {
             />
           </div>
           <span
-            className="text-[10px] md:text-xs font-pixel-ko text-bone-white/70 tracking-wide"
+            className="-mt-12 md:-mt-16 text-base md:text-xl font-pixel-ko text-bone-white/80 tracking-wide"
             style={{ textShadow: `0 0 6px ${m.glow}88` }}
           >
             {m.label}
