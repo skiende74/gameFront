@@ -19,7 +19,7 @@ import {
 import { GameHud } from "../hud/GameHud";
 import { PauseMenu } from "../hud/PauseMenu";
 import { GameState } from "../state/GameState";
-import { ensureEnemyAnimations } from "../entities/Enemy";
+import { Enemy, ensureEnemyAnimations } from "../entities/Enemy";
 import { ensureMercAnimations } from "../entities/Mercenary";
 import { WaveManager } from "../systems/WaveManager";
 import { ProjectileManager } from "../systems/ProjectileManager";
@@ -27,6 +27,7 @@ import { MercManager } from "../systems/MercManager";
 
 const GAME_EXIT_EVENT = "game:exit";
 const TORCH_ANIM_KEY = "torch-burn";
+const HURT_IFRAME_MS = 700;
 
 type WasdKeys = {
   up: Phaser.Input.Keyboard.Key;
@@ -49,6 +50,7 @@ export class DungeonScene extends Phaser.Scene {
   private hud?: GameHud;
   private pauseMenu?: PauseMenu;
   private paused = false;
+  private hurtCooldown = 0;
   private state!: GameState;
   private waves?: WaveManager;
   private projectiles?: ProjectileManager;
@@ -94,6 +96,15 @@ export class DungeonScene extends Phaser.Scene {
       (targetX) => this.triggerAttackAnim(targetX),
     );
 
+    // 적과 몸이 닿으면 플레이어가 접촉 피해를 입는다.
+    this.physics.add.overlap(
+      this.player,
+      this.waves.enemies,
+      this.onEnemyContact as unknown as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
+      undefined,
+      this,
+    );
+
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
     this.pauseMenu = new PauseMenu(
@@ -125,9 +136,32 @@ export class DungeonScene extends Phaser.Scene {
     }
   }
 
+  /** 적과 겹칠 때 호출. 무적 시간이 끝났을 때만 해당 적의 피해량만큼 체력을 깎는다. */
+  private onEnemyContact(
+    _player: Phaser.GameObjects.GameObject,
+    enemyObj: Phaser.GameObjects.GameObject,
+  ): void {
+    if (this.paused || this.hurtCooldown > 0 || this.state.over) return;
+    const enemy = enemyObj as Enemy;
+    if (!enemy.targetable) return;
+
+    this.hurtCooldown = HURT_IFRAME_MS;
+    this.state.damagePlayer(enemy.damage);
+    this.flashPlayerHurt();
+  }
+
+  /** 피격 피드백: 플레이어를 붉게 깜빡이고 카메라를 살짝 흔든다. */
+  private flashPlayerHurt(): void {
+    this.player.setTint(0xff6b6b);
+    this.cameras.main.shake(120, 0.006);
+    this.time.delayedCall(140, () => this.player.clearTint());
+  }
+
   update(_time: number, delta: number): void {
     if (!this.keys || !this.player) return;
     if (this.paused) return;
+
+    if (this.hurtCooldown > 0) this.hurtCooldown -= delta;
 
     let dx = 0;
     let dy = 0;
