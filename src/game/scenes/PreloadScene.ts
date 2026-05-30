@@ -6,6 +6,7 @@ import {
   GAME_HEIGHT,
   GAME_WIDTH,
   HERO_FRAME,
+  MERC_ICON_SOURCES,
   PACK_PATH,
   TEX,
   TILE,
@@ -39,12 +40,18 @@ export class PreloadScene extends Phaser.Scene {
     this.load.spritesheet(TEX.heroIdleSide, PACK_PATH.heroIdleSide, heroFrame);
     this.load.image(TEX.heroShadow, PACK_PATH.heroShadow);
 
+    const classFrame = { frameWidth: CLASS_FRAME.width, frameHeight: CLASS_FRAME.height };
+
     const classId = this.registry.get("classId") as string | null;
     const classDef = classId ? CLASS_DEFS[classId] : undefined;
     if (classDef) {
-      const classFrame = { frameWidth: CLASS_FRAME.width, frameHeight: CLASS_FRAME.height };
       this.load.spritesheet(TEX.classIdle, classSheetPath(classDef.folder, "Idle"), classFrame);
       this.load.spritesheet(TEX.classWalk, classSheetPath(classDef.folder, "Walk"), classFrame);
+    }
+
+    // 하단 용병 바에서 사용할 4종 아이콘 스프라이트시트 (idle 1프레임을 아이콘으로 사용)
+    for (const merc of MERC_ICON_SOURCES) {
+      this.load.spritesheet(merc.tex, classSheetPath(merc.folder, "Idle"), classFrame);
     }
 
     this.load.on("loaderror", (file: Phaser.Loader.File) => {

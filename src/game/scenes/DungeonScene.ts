@@ -16,6 +16,7 @@ import {
   TORCH_FRAMES,
   WORLD_BOUNDARY,
 } from "../config";
+import { GameHud } from "../hud/GameHud";
 
 const GAME_EXIT_EVENT = "game:exit";
 const TORCH_ANIM_KEY = "torch-burn";
@@ -38,7 +39,7 @@ export class DungeonScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private shadow!: Phaser.GameObjects.Image;
   private keys?: WasdKeys;
-  private coordText?: Phaser.GameObjects.Text;
+  private hud?: GameHud;
   private facing: Facing = "down";
   private usingClass = false;
   private footOffset = HERO_FRAME.height * TILE_SCALE * 0.42;
@@ -61,7 +62,7 @@ export class DungeonScene extends Phaser.Scene {
     this.spawnAmbientTorches();
     this.spawnPlayer();
     this.drawVignette();
-    this.drawHud();
+    this.buildHud();
     this.setupInput();
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
@@ -103,15 +104,7 @@ export class DungeonScene extends Phaser.Scene {
     this.floor.tilePositionX = this.cameras.main.scrollX;
     this.floor.tilePositionY = this.cameras.main.scrollY;
 
-    if (this.coordText) {
-      const x = Math.round(this.player.x);
-      const y = Math.round(this.player.y);
-      this.coordText.setText(`X: ${x.toLocaleString()} / Y: ${y.toLocaleString()}`);
-    }
-
-    // delta is unused for now (Arcade physics handles dt), keep param for the
-    // signature so we don't have to widen it later.
-    void delta;
+    this.hud?.update(delta);
   }
 
   private createInfiniteFloor(): void {
@@ -312,35 +305,13 @@ export class DungeonScene extends Phaser.Scene {
       .setBlendMode(Phaser.BlendModes.MULTIPLY);
   }
 
-  private drawHud(): void {
-    const cx = GAME_WIDTH / 2;
-    const fix = (t: Phaser.GameObjects.Text) => t.setScrollFactor(0).setDepth(30);
+  private buildHud(): void {
+    this.hud = new GameHud(this);
+    this.hud.build();
 
-    fix(
-      this.add
-        .text(
-          cx,
-          GAME_HEIGHT - 28,
-          "[WASD / 방향키] 이동 · [ESC] 타이틀로 돌아가기",
-          {
-            fontFamily: "Galmuri11, monospace",
-            fontSize: "13px",
-            color: HEX.ash,
-          },
-        )
-        .setOrigin(0.5)
-        .setShadow(0, 1, "#000", 3, true, true),
-    );
-
-    this.coordText = this.add
-      .text(GAME_WIDTH - 20, 20, "X: 0 / Y: 0", {
-        fontFamily: "Galmuri11, monospace",
-        fontSize: "14px",
-        color: HEX.ash,
-      })
-      .setOrigin(1, 0)
-      .setShadow(0, 1, "#000", 3, true, true);
-    fix(this.coordText);
+    // 시작 용병 1명: 선택한 직업으로 파티를 시작한다.
+    const classId = this.registry.get("classId") as string | null;
+    this.hud.addMerc(classId ?? "sword");
   }
 
   private setupInput(): void {

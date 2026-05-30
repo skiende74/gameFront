@@ -46,6 +46,10 @@ export const TEX = {
   heroShadow: "tex-hero-shadow",
   classIdle: "tex-class-idle",
   classWalk: "tex-class-walk",
+  mercSword: "tex-merc-sword",
+  mercBow: "tex-merc-bow",
+  mercMage: "tex-merc-mage",
+  mercCleric: "tex-merc-cleric",
   procFloor: "tex-proc-floor",
   procFloorAlt: "tex-proc-floor-alt",
   procWallTop: "tex-proc-wall-top",
@@ -115,3 +119,34 @@ export const TILE = {
 } as const;
 
 export const TORCH_FRAMES = [0, 1, 2] as const;
+
+/** 인게임 HUD(상단 정보 바 / 하단 용병 바) 설정 값 */
+export const HUD = {
+  depth: 40,
+  margin: 16,
+  panelHeight: 56,
+  totalTimeSec: 600,
+  waveSec: 30,
+  totalWaves: 20,
+  playerMaxHp: 100,
+  slotBox: 60,
+  slotGap: 10,
+} as const;
+
+export type MercHudInfo = { label: string; color: number; tex: string };
+
+/** 하단 용병 슬롯/아이콘에서 사용하는 직업별 메타데이터 */
+export const MERC_HUD: Record<string, MercHudInfo> = {
+  sword: { label: "검사", color: 0xff6b6b, tex: TEX.mercSword },
+  bow: { label: "궁수", color: 0x6bd96b, tex: TEX.mercBow },
+  mage: { label: "마법사", color: 0xc47aff, tex: TEX.mercMage },
+  cleric: { label: "성직자", color: 0xffe066, tex: TEX.mercCleric },
+};
+
+/** 직업 id → 용병 아이콘 텍스처 로딩 정보 (PreloadScene 에서 사용) */
+export const MERC_ICON_SOURCES: Array<{ id: string; tex: string; folder: string }> =
+  Object.keys(MERC_HUD).map((id) => ({
+    id,
+    tex: MERC_HUD[id].tex,
+    folder: CLASS_DEFS[id].folder,
+  }));
