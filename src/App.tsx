@@ -16,19 +16,9 @@ function GamePage() {
 
   useEffect(() => {
     if (!selectedClass) return;
-    const exitToTitle = () => navigate("/");
-
-    const onExit = () => exitToTitle();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") exitToTitle();
-    };
-
+    const onExit = () => navigate("/");
     window.addEventListener("game:exit", onExit);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("game:exit", onExit);
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("game:exit", onExit);
   }, [navigate, selectedClass]);
 
   if (!selectedClass) {

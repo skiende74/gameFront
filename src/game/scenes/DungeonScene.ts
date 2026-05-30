@@ -17,6 +17,7 @@ import {
   WORLD_BOUNDARY,
 } from "../config";
 import { GameHud } from "../hud/GameHud";
+import { PauseMenu } from "../hud/PauseMenu";
 import { GameState } from "../state/GameState";
 import { ensureEnemyAnimations } from "../entities/Enemy";
 import { ensureMercAnimations } from "../entities/Mercenary";
@@ -46,6 +47,8 @@ export class DungeonScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Image;
   private keys?: WasdKeys;
   private hud?: GameHud;
+  private pauseMenu?: PauseMenu;
+  private paused = false;
   private state!: GameState;
   private waves?: WaveManager;
   private projectiles?: ProjectileManager;
@@ -93,13 +96,38 @@ export class DungeonScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
-    this.input.keyboard?.on("keydown-ESC", () => {
-      window.dispatchEvent(new CustomEvent(GAME_EXIT_EVENT));
-    });
+    this.pauseMenu = new PauseMenu(
+      this,
+      () => this.setPaused(false),
+      () => window.dispatchEvent(new CustomEvent(GAME_EXIT_EVENT)),
+    );
+    this.pauseMenu.build();
+
+    this.input.keyboard?.on("keydown-ESC", () => this.togglePause());
+  }
+
+  private togglePause(): void {
+    this.setPaused(!this.paused);
+  }
+
+  private setPaused(paused: boolean): void {
+    if (paused === this.paused) return;
+    this.paused = paused;
+
+    if (paused) {
+      const body = this.player.body as Phaser.Physics.Arcade.Body;
+      body.setVelocity(0, 0);
+      this.physics.world.pause();
+      this.pauseMenu?.show();
+    } else {
+      this.physics.world.resume();
+      this.pauseMenu?.hide();
+    }
   }
 
   update(_time: number, delta: number): void {
     if (!this.keys || !this.player) return;
+    if (this.paused) return;
 
     let dx = 0;
     let dy = 0;
