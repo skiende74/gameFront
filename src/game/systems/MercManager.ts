@@ -8,6 +8,7 @@ import type { ProjectileManager } from "./ProjectileManager";
 
 const CLUMP_SPACING_X = 32;
 const CLUMP_SPACING_Y = 20;
+const HEAL_DELAY_MS = 400;
 
 /**
  * 파티(GameState.party)에 맞춰 전투를 조율한다.
@@ -73,7 +74,7 @@ export class MercManager {
       merc.steer(tx, ty);
       merc.setDepth(merc.y > player.y ? 21 : 18);
       merc.tickCooldown(deltaMs);
-      this.runCombat(merc, player);
+      this.runCombat(merc);
     });
   }
 
@@ -87,8 +88,7 @@ export class MercManager {
       if (this.playerCooldown <= 0) {
         this.playerCooldown = this.cooldownFor(combat);
         this.onPlayerAttack?.(player.x);
-        this.state.healPlayer(combat.heal ?? 0);
-        this.healPulse(player.x, player.y);
+        this.scheduleHeal(combat.heal ?? 0);
       }
       return;
     }
@@ -102,13 +102,12 @@ export class MercManager {
     this.performAttack(combat, player.x, player.y, target);
   }
 
-  private runCombat(merc: Mercenary, player: Phaser.Physics.Arcade.Sprite): void {
+  private runCombat(merc: Mercenary): void {
     if (merc.combat.role === "heal") {
       if (merc.ready) {
         merc.resetCooldown(this.cooldownFor(merc.combat));
         merc.playAttackCue();
-        this.state.healPlayer(merc.combat.heal ?? 0);
-        this.healPulse(player.x, player.y);
+        this.scheduleHeal(merc.combat.heal ?? 0);
       }
       return;
     }
@@ -268,6 +267,15 @@ export class MercManager {
       duration: 480,
       ease: "Quad.out",
       onComplete: () => pulse.destroy(),
+    });
+  }
+
+  private scheduleHeal(amount: number): void {
+    this.scene.time.delayedCall(HEAL_DELAY_MS, () => {
+      const player = this.getPlayer();
+      if (!player || this.state.over) return;
+      this.state.healPlayer(amount);
+      this.healPulse(player.x, player.y);
     });
   }
 
