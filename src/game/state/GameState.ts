@@ -15,6 +15,7 @@ export const GAME_EVENT = {
 
 export type GameOverPayload = { victory: boolean };
 export type UpgradeRequestPayload = { completedWave: number; nextWave: number };
+export type GameStateOptions = { waveSec?: number };
 
 /**
  * 인게임 단일 상태 저장소. 시간·웨이브·체력·처치수·용병단을 보유하고
@@ -22,6 +23,8 @@ export type UpgradeRequestPayload = { completedWave: number; nextWave: number };
  */
 export class GameState extends Phaser.Events.EventEmitter {
   elapsedSec = 0;
+  waveElapsedSec = 0;
+  waveSec: number = HUD.waveSec;
   wave = 1;
   kills = 0;
   score = 0;
@@ -36,10 +39,17 @@ export class GameState extends Phaser.Events.EventEmitter {
   /** 튜토리얼 모드에서는 false로 두어 시간 경과에 따른 자동 웨이브/승리 처리를 막는다. */
   autoProgress = true;
 
+  constructor(options: GameStateOptions = {}) {
+    super();
+    if (options.waveSec) this.waveSec = options.waveSec;
+  }
+
   /** 매 프레임 호출되어 경과 시간과 웨이브를 진행시킨다. */
   tick(deltaMs: number): void {
     if (this.over || this.upgradePending) return;
-    this.elapsedSec = Math.min(HUD.totalTimeSec, this.elapsedSec + deltaMs / 1000);
+    const deltaSec = deltaMs / 1000;
+    this.elapsedSec = Math.min(HUD.totalTimeSec, this.elapsedSec + deltaSec);
+    this.waveElapsedSec += deltaSec;
     this.emit(GAME_EVENT.time, this.elapsedSec);
 
     if (!this.autoProgress) return;
@@ -49,9 +59,15 @@ export class GameState extends Phaser.Events.EventEmitter {
       return;
     }
 
-    if (this.wave < HUD.totalWaves && this.elapsedSec >= this.wave * HUD.waveSec) {
+    if (this.wave < HUD.totalWaves && this.waveElapsedSec >= this.waveSec) {
       this.requestUpgrade();
     }
+  }
+
+  setWaveSec(seconds: number): void {
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+    this.waveSec = seconds;
+    this.emit(GAME_EVENT.time, this.elapsedSec);
   }
 
   /** 튜토리얼에서 카드 선택 단계를 직접 띄우기 위해 업그레이드 요청을 강제한다. */
@@ -104,8 +120,10 @@ export class GameState extends Phaser.Events.EventEmitter {
   completeUpgrade(): void {
     if (!this.upgradePending || this.over) return;
     this.upgradePending = false;
+    this.waveElapsedSec = 0;
     this.wave = Math.min(HUD.totalWaves, this.wave + 1);
     this.emit(GAME_EVENT.wave, this.wave);
+    this.emit(GAME_EVENT.time, this.elapsedSec);
   }
 
   get finalScore(): number {

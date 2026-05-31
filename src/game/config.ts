@@ -149,6 +149,12 @@ export const HUD = {
   slotGap: 10,
 } as const;
 
+export const DEV_MODE = {
+  defaultWaveSec: 5,
+  minWaveSec: 1,
+  maxWaveSec: 60,
+} as const;
+
 export type MercHudInfo = { label: string; color: number; tex: string };
 
 /** 하단 용병 슬롯/아이콘에서 사용하는 직업별 메타데이터 */

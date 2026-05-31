@@ -4,9 +4,14 @@ import { PreloadScene } from "./scenes/PreloadScene";
 import { DungeonScene } from "./scenes/DungeonScene";
 import { GAME_WIDTH, GAME_HEIGHT, HEX } from "./config";
 
-type Props = { classId?: string | null; tutorial?: boolean };
+type Props = {
+  classId?: string | null;
+  tutorial?: boolean;
+  devMode?: boolean;
+  devWaveSec?: number;
+};
 
-export function PhaserGame({ classId, tutorial = false }: Props) {
+export function PhaserGame({ classId, tutorial = false, devMode = false, devWaveSec }: Props) {
   const mountGame = useCallback(
     (parent: HTMLDivElement | null) => {
       if (!parent) return;
@@ -30,10 +35,12 @@ export function PhaserGame({ classId, tutorial = false }: Props) {
       });
       game.registry.set("classId", classId ?? null);
       game.registry.set("tutorial", tutorial);
+      game.registry.set("devMode", devMode);
+      game.registry.set("devWaveSec", devWaveSec ?? null);
 
       return () => game.destroy(true);
     },
-    [classId, tutorial],
+    [classId, tutorial, devMode, devWaveSec],
   );
 
   return (

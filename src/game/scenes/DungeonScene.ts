@@ -36,6 +36,7 @@ import { getUpgrade, type UpgradeId } from "../data/upgrades";
 const GAME_EXIT_EVENT = "game:exit";
 const UPGRADE_REQUEST_EVENT = "game:upgrade-request";
 const UPGRADE_SELECTED_EVENT = "game:upgrade-selected";
+const DEV_WAVE_SEC_EVENT = "game:dev-wave-sec-change";
 const TORCH_ANIM_KEY = "torch-burn";
 const HURT_IFRAME_MS = 650;
 
@@ -66,6 +67,7 @@ export class DungeonScene extends Phaser.Scene {
   private waitingForUpgrade = false;
   private upgradeOverlay?: Phaser.GameObjects.Container;
   private upgradeSelectedHandler?: EventListener;
+  private devWaveSecHandler?: EventListener;
   private hurtCooldown = 0;
   private state!: GameState;
   private waves?: WaveManager;
@@ -90,7 +92,10 @@ export class DungeonScene extends Phaser.Scene {
       WORLD_BOUNDARY,
     );
 
-    this.state = new GameState();
+    const devWaveSec = this.registry.get("devWaveSec");
+    this.state = new GameState({
+      waveSec: typeof devWaveSec === "number" ? devWaveSec : undefined,
+    });
 
     this.createInfiniteFloor();
     this.registerAnimations();
@@ -147,6 +152,13 @@ export class DungeonScene extends Phaser.Scene {
       this.completeUpgradeWait(detail?.upgradeId);
     };
     window.addEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
+    if (this.registry.get("devMode") === true) {
+      this.devWaveSecHandler = (event) => {
+        const detail = (event as CustomEvent<{ waveSec?: number }>).detail;
+        if (typeof detail?.waveSec === "number") this.state.setWaveSec(detail.waveSec);
+      };
+      window.addEventListener(DEV_WAVE_SEC_EVENT, this.devWaveSecHandler);
+    }
     this.events.once("shutdown", this.cleanupScene, this);
     this.events.once("destroy", this.cleanupScene, this);
 
@@ -383,6 +395,10 @@ export class DungeonScene extends Phaser.Scene {
     if (this.upgradeSelectedHandler) {
       window.removeEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
       this.upgradeSelectedHandler = undefined;
+    }
+    if (this.devWaveSecHandler) {
+      window.removeEventListener(DEV_WAVE_SEC_EVENT, this.devWaveSecHandler);
+      this.devWaveSecHandler = undefined;
     }
     this.tutorial?.destroy();
     this.tutorial = undefined;

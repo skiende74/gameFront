@@ -3,7 +3,15 @@ import { useEventListener } from "usehooks-ts";
 import { TitleScreen } from "./ui/TitleScreen.tsx";
 import { CharacterSelectModal } from "./ui/CharacterSelectModal.tsx";
 import { UpgradeModal } from "./ui/UpgradeModal.tsx";
+import { DevModePanel } from "./ui/DevModePanel.tsx";
 import { PhaserGame } from "./game/PhaserGame.tsx";
+import { DEV_MODE } from "./game/config.ts";
+
+function parseDevWaveSec(value: string | null): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return DEV_MODE.defaultWaveSec;
+  return Math.min(DEV_MODE.maxWaveSec, Math.max(DEV_MODE.minWaveSec, n));
+}
 
 function TitlePage() {
   const navigate = useNavigate();
@@ -15,6 +23,8 @@ function GamePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedClass = searchParams.get("class");
   const isTutorial = searchParams.get("tutorial") === "1";
+  const devMode = searchParams.get("dev") === "1";
+  const devWaveSec = devMode ? parseDevWaveSec(searchParams.get("waveSec")) : undefined;
 
   useEventListener("game:exit", () => {
     if (selectedClass || isTutorial) navigate("/");
@@ -51,7 +61,12 @@ function GamePage() {
         <CharacterSelectModal
           open
           onClose={() => navigate("/")}
-          onSelect={(classId) => setSearchParams({ class: classId }, { replace: true })}
+          onSelect={(classId) => {
+            const next = new URLSearchParams(searchParams);
+            next.set("class", classId);
+            next.delete("tutorial");
+            setSearchParams(next, { replace: true });
+          }}
         />
       </div>
     );
@@ -59,8 +74,9 @@ function GamePage() {
 
   return (
     <>
-      <PhaserGame classId={selectedClass} />
+      <PhaserGame classId={selectedClass} devMode={devMode} devWaveSec={devWaveSec} />
       <UpgradeModal />
+      {devMode && <DevModePanel initialWaveSec={devWaveSec ?? DEV_MODE.defaultWaveSec} />}
     </>
   );
 }

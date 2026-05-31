@@ -4,6 +4,7 @@ declare global {
     "game:exit": CustomEvent;
     "game:upgrade-request": CustomEvent<{ completedWave: number; nextWave: number }>;
     "game:upgrade-selected": CustomEvent<{ upgradeId?: string }>;
+    "game:dev-wave-sec-change": CustomEvent<{ waveSec: number }>;
   }
 }
 
