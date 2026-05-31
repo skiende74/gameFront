@@ -92,7 +92,8 @@ export class MercManager {
       return;
     }
 
-    const target = this.nearestEnemy(player.x, player.y, combat.range);
+    const center = this.bodyCenter(player);
+    const target = this.nearestEnemy(center.x, center.y, combat.range);
     if (!target) return;
     if (this.playerCooldown > 0) return;
     this.playerCooldown = this.cooldownFor(combat);
@@ -111,7 +112,8 @@ export class MercManager {
       return;
     }
 
-    const target = this.nearestEnemy(merc.x, merc.y, merc.combat.range);
+    const center = this.bodyCenter(merc);
+    const target = this.nearestEnemy(center.x, center.y, merc.combat.range);
     if (!target) return;
 
     merc.faceTo(target.x);
@@ -153,13 +155,20 @@ export class MercManager {
     for (const obj of this.getEnemies().getChildren()) {
       const e = obj as Enemy;
       if (!e.targetable) continue;
-      const d = (e.x - x) * (e.x - x) + (e.y - y) * (e.y - y);
+      const center = this.bodyCenter(e);
+      const d = (center.x - x) * (center.x - x) + (center.y - y) * (center.y - y);
       if (d < bestDist) {
         bestDist = d;
         best = e;
       }
     }
     return best;
+  }
+
+  private bodyCenter(sprite: Phaser.GameObjects.Sprite): Phaser.Math.Vector2 {
+    const body = (sprite as Phaser.GameObjects.Sprite & { body?: Phaser.Physics.Arcade.Body }).body;
+    if (!body) return new Phaser.Math.Vector2(sprite.x, sprite.y);
+    return new Phaser.Math.Vector2(body.center.x, body.center.y);
   }
 
   /** 공격자(ax,ay)에서 대상(tx,ty) 방향으로 칼날이 호를 그리며 베는 슬래시 이펙트. */
