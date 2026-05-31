@@ -6,7 +6,7 @@ import type { GameState } from "../state/GameState";
 
 const ARROW_SPEED = 560;
 const MAGIC_SPEED = 380;
-const MAX_PROJECTILES = 120;
+const MAX_PROJECTILES = 100;
 
 const MAGIC_TINT = 0xc47aff;
 

@@ -7,7 +7,7 @@ export const TILE_COLS = Math.ceil(GAME_WIDTH / TILE_DRAW);
 export const TILE_ROWS = Math.ceil(GAME_HEIGHT / TILE_DRAW);
 export const FLOOR_PATCH_TILES = 16;
 export const WORLD_BOUNDARY = 200_000;
-export const PLAYER_SPEED = 200;
+export const PLAYER_SPEED = 220;
 export const HERO_FRAME = { width: 32, height: 48, frameCount: 4 } as const;
 
 export const COLORS = {

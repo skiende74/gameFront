@@ -38,6 +38,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setOrigin(0.5, def.feetRatio);
     this.setDepth(ENEMY_DEPTH);
     this.setAlpha(1);
+    this.clearTint();
     this.setActive(true);
     this.setVisible(true);
     this.play(enemyAnimKey(def.id, "walk"), true);
@@ -101,6 +102,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   private deactivate(): void {
+    this.clearTint();
     this.setActive(false);
     this.setVisible(false);
     (this.body as Phaser.Physics.Arcade.Body).enable = false;

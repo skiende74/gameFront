@@ -10,10 +10,10 @@ export type WavePhase = {
 };
 
 export const WAVE_PHASES: WavePhase[] = [
-  { minWave: 1, maxWave: 4, types: ["slime"], minAlive: 10, maxAlive: 20 },
-  { minWave: 5, maxWave: 10, types: ["slime", "rusher"], minAlive: 20, maxAlive: 35 },
-  { minWave: 11, maxWave: 16, types: ["slime", "rusher", "brute"], minAlive: 35, maxAlive: 50 },
-  { minWave: 17, maxWave: 20, types: ["slime", "rusher", "brute"], minAlive: 50, maxAlive: 60 },
+  { minWave: 1, maxWave: 4, types: ["slime"], minAlive: 6, maxAlive: 14 },
+  { minWave: 5, maxWave: 10, types: ["slime", "rusher"], minAlive: 14, maxAlive: 28 },
+  { minWave: 11, maxWave: 16, types: ["slime", "rusher", "brute"], minAlive: 28, maxAlive: 45 },
+  { minWave: 17, maxWave: 20, types: ["slime", "rusher", "brute"], minAlive: 45, maxAlive: 65 },
 ];
 
 export function phaseForWave(wave: number): WavePhase {

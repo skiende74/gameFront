@@ -36,7 +36,7 @@ const GAME_EXIT_EVENT = "game:exit";
 const UPGRADE_REQUEST_EVENT = "game:upgrade-request";
 const UPGRADE_SELECTED_EVENT = "game:upgrade-selected";
 const TORCH_ANIM_KEY = "torch-burn";
-const HURT_IFRAME_MS = 700;
+const HURT_IFRAME_MS = 650;
 
 type WasdKeys = {
   up: Phaser.Input.Keyboard.Key;
