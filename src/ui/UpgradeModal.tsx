@@ -16,7 +16,7 @@ export function UpgradeModal() {
   useEffect(() => {
     const onRequest = (event: WindowEventMap["game:upgrade-request"]) => {
       setRequest(event.detail);
-      setChoices(rollUpgradeChoices(3));
+      setChoices(rollUpgradeChoices(3, { excludeHire: event.detail.mercFull }));
     };
 
     window.addEventListener("game:upgrade-request", onRequest);

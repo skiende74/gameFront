@@ -80,6 +80,12 @@ export function getUpgrade(id: string | undefined): UpgradeDef | undefined {
   return UPGRADE_DEFS[id as UpgradeId];
 }
 
-export function rollUpgradeChoices(count = 3): UpgradeDef[] {
-  return [...UPGRADE_LIST].sort(() => Math.random() - 0.5).slice(0, count);
+export function rollUpgradeChoices(
+  count = 3,
+  opts?: { excludeHire?: boolean },
+): UpgradeDef[] {
+  const pool = opts?.excludeHire
+    ? UPGRADE_LIST.filter((u) => !u.id.startsWith("hire-"))
+    : [...UPGRADE_LIST];
+  return [...pool].sort(() => Math.random() - 0.5).slice(0, count);
 }

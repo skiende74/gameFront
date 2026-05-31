@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { HUD } from "../config";
+import { HUD, MAX_HIRED_MERCS } from "../config";
 import { bossIdForWave, isBossWave, type EnemyId } from "../data/enemies";
 
 /** GameState 가 발행하는 이벤트 키. HUD·시스템이 구독해 화면/로직을 갱신한다. */
@@ -91,6 +91,16 @@ export class GameState extends Phaser.Events.EventEmitter {
   addMerc(id: string): void {
     this.party.push(id);
     this.emit(GAME_EVENT.party, this.party);
+  }
+
+  /** 고용된 용병 수(파티 0번 = 플레이어 본체 제외). */
+  get hiredMercCount(): number {
+    return Math.max(0, this.party.length - 1);
+  }
+
+  /** 용병이 최대치까지 찼는지. 보상 카드에서 고용 카드를 숨길 때 사용. */
+  get mercFull(): boolean {
+    return this.hiredMercCount >= MAX_HIRED_MERCS;
   }
 
   damagePlayer(amount: number): void {

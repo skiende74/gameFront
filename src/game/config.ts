@@ -163,6 +163,9 @@ export const HUD = {
   slotGap: 10,
 } as const;
 
+/** 카드로 고용 가능한 용병(플레이어 본체 제외)의 최대 수. */
+export const MAX_HIRED_MERCS = 5;
+
 export const DEV_MODE = {
   defaultWaveSec: 5,
   minWaveSec: 1,

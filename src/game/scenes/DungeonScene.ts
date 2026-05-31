@@ -319,7 +319,11 @@ export class DungeonScene extends Phaser.Scene {
     this.physics.world.pause();
     this.showUpgradeWait(payload);
 
-    window.dispatchEvent(new CustomEvent(UPGRADE_REQUEST_EVENT, { detail: payload }));
+    window.dispatchEvent(
+      new CustomEvent(UPGRADE_REQUEST_EVENT, {
+        detail: { ...payload, mercFull: this.state.mercFull },
+      }),
+    );
   }
 
   private completeUpgradeWait(upgradeId?: string): void {
