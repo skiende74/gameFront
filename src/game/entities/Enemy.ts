@@ -69,25 +69,28 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   /** 피해를 입는다. 체력이 0 이하가 되면 사망 처리하고 true 를 반환. */
   takeDamage(amount: number): boolean {
     if (!this.targetable) return false;
-    this.flashHit();
     this.hp -= amount;
     if (this.hp <= 0) {
       this.die();
       return true;
     }
+    this.playHurt();
     return false;
   }
 
-  private flashHit(): void {
-    this.setTint(0xffffff);
-    this.setTintMode(Phaser.TintModes.FILL);
-    this.scene.time.delayedCall(70, () => {
-      if (this.active && !this.dying) this.clearTint();
+  private playHurt(): void {
+    const hurtKey = enemyAnimKey(this.def.id, "hurt");
+    if (!this.scene.anims.exists(hurtKey)) return;
+    this.off(`animationcomplete-${hurtKey}`);
+    this.play(hurtKey, true);
+    this.once(`animationcomplete-${hurtKey}`, () => {
+      if (this.targetable) this.play(enemyAnimKey(this.def.id, "walk"), true);
     });
   }
 
   private die(): void {
     this.dying = true;
+    this.off(`animationcomplete-${enemyAnimKey(this.def.id, "hurt")}`);
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
     body.enable = false;
@@ -114,7 +117,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
  * 텍스처 실제 너비에서 프레임 수를 동적으로 계산한다.
  */
 export function ensureEnemyAnimations(scene: Phaser.Scene): void {
-  const kinds: Array<"idle" | "walk" | "death"> = ["idle", "walk", "death"];
+  const kinds: Array<"idle" | "walk" | "hurt" | "death"> = ["idle", "walk", "hurt", "death"];
   for (const id of ENEMY_IDS) {
     for (const kind of kinds) {
       const tex = enemyTex(id, kind);
@@ -127,7 +130,7 @@ export function ensureEnemyAnimations(scene: Phaser.Scene): void {
         key,
         frames: scene.anims.generateFrameNumbers(tex, { start: 0, end: frameCount - 1 }),
         frameRate: kind === "walk" ? 10 : 8,
-        repeat: kind === "death" ? 0 : -1,
+        repeat: kind === "idle" || kind === "walk" ? -1 : 0,
       });
     }
   }

@@ -61,6 +61,8 @@ export class PreloadScene extends Phaser.Scene {
         classSheetPath(classDef.folder, classDef.attackFile),
         classFrame,
       );
+      this.load.spritesheet(TEX.classHurt, classSheetPath(classDef.folder, "Hurt"), classFrame);
+      this.load.spritesheet(TEX.classDeath, classSheetPath(classDef.folder, "Death"), classFrame);
     }
 
     // 하단 용병 바에서 사용할 4종 아이콘 스프라이트시트 (idle 1프레임을 아이콘으로 사용)
@@ -68,12 +70,13 @@ export class PreloadScene extends Phaser.Scene {
       this.load.spritesheet(merc.tex, classSheetPath(merc.folder, "Idle"), classFrame);
     }
 
-    // 적 3종 스프라이트시트 (idle / walk / death)
+    // 적 3종 스프라이트시트 (idle / walk / hurt / death)
     const enemyFrame = { frameWidth: ENEMY_FRAME.width, frameHeight: ENEMY_FRAME.height };
     for (const id of ENEMY_IDS) {
       const folder = ENEMY_DEFS[id].folder;
       this.load.spritesheet(enemyTex(id, "idle"), enemySheetPath(folder, "idle"), enemyFrame);
       this.load.spritesheet(enemyTex(id, "walk"), enemySheetPath(folder, "walk"), enemyFrame);
+      this.load.spritesheet(enemyTex(id, "hurt"), enemySheetPath(folder, "hurt"), enemyFrame);
       this.load.spritesheet(enemyTex(id, "death"), enemySheetPath(folder, "death"), enemyFrame);
     }
 

@@ -72,6 +72,7 @@ export class DungeonScene extends Phaser.Scene {
   private facing: Facing = "down";
   private usingClass = false;
   private attacking = false;
+  private hurting = false;
   private footOffset = HERO_FRAME.height * TILE_SCALE * 0.42;
 
   constructor() {
@@ -156,6 +157,7 @@ export class DungeonScene extends Phaser.Scene {
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
+    if (!payload.victory) this.playPlayerDeath();
     this.physics.world.pause();
     this.pauseMenu?.hide();
 
@@ -200,14 +202,25 @@ export class DungeonScene extends Phaser.Scene {
 
     this.hurtCooldown = HURT_IFRAME_MS;
     this.state.damagePlayer(enemy.damage);
-    this.flashPlayerHurt();
+    if (!this.state.over) this.flashPlayerHurt();
   }
 
-  /** 피격 피드백: 플레이어를 붉게 깜빡이고 카메라를 살짝 흔든다. */
+  /** 피격 피드백: 직업 에셋의 Hurt 애니메이션을 재생하고 카메라를 살짝 흔든다. */
   private flashPlayerHurt(): void {
-    this.player.setTint(0xff6b6b);
     this.cameras.main.shake(120, 0.006);
-    this.time.delayedCall(140, () => this.player.clearTint());
+    if (!this.usingClass || !this.anims.exists(CLASS_ANIM.hurt)) {
+      this.player.setTint(0xff6b6b);
+      this.time.delayedCall(140, () => this.player.clearTint());
+      return;
+    }
+
+    this.attacking = false;
+    this.hurting = true;
+    this.player.off(`animationcomplete-${CLASS_ANIM.hurt}`);
+    this.player.play(CLASS_ANIM.hurt, true);
+    this.player.once(`animationcomplete-${CLASS_ANIM.hurt}`, () => {
+      this.hurting = false;
+    });
   }
 
   update(_time: number, delta: number): void {
@@ -232,14 +245,14 @@ export class DungeonScene extends Phaser.Scene {
       if (this.usingClass) {
         if (dx < 0) this.player.setFlipX(true);
         else if (dx > 0) this.player.setFlipX(false);
-        // 공격 모션 재생 중에는 idle/walk 로 덮어쓰지 않는다.
-        if (!this.attacking) this.player.play(CLASS_ANIM.walk, true);
+        // 공격/피격 모션 재생 중에는 idle/walk 로 덮어쓰지 않는다.
+        if (!this.attacking && !this.hurting) this.player.play(CLASS_ANIM.walk, true);
       } else {
         this.updateFacing(dx, dy);
       }
     } else {
       body.setVelocity(0, 0);
-      if (this.usingClass && !this.attacking) this.player.play(CLASS_ANIM.idle, true);
+      if (this.usingClass && !this.attacking && !this.hurting) this.player.play(CLASS_ANIM.idle, true);
     }
 
     this.shadow.setPosition(this.player.x, this.player.y + this.footOffset);
@@ -432,11 +445,25 @@ export class DungeonScene extends Phaser.Scene {
         repeat: 0,
       });
     }
+    this.registerOneShotClassAnim(TEX.classHurt, CLASS_ANIM.hurt, 10);
+    this.registerOneShotClassAnim(TEX.classDeath, CLASS_ANIM.death, 8);
+  }
+
+  private registerOneShotClassAnim(texKey: string, animKey: string, frameRate: number): void {
+    if (this.anims.exists(animKey) || !this.textures.exists(texKey)) return;
+    const img = this.textures.get(texKey).getSourceImage() as HTMLImageElement;
+    const frameTotal = Math.max(1, Math.floor(img.width / CLASS_FRAME.width));
+    this.anims.create({
+      key: animKey,
+      frames: this.anims.generateFrameNumbers(texKey, { start: 0, end: frameTotal - 1 }),
+      frameRate,
+      repeat: 0,
+    });
   }
 
   /** 플레이어가 공격할 때 직업 공격 모션을 1회 재생한다(이동 애니메이션을 잠시 막는다). */
   triggerAttackAnim(targetX: number): void {
-    if (!this.usingClass || this.attacking || !this.anims.exists(CLASS_ANIM.attack)) return;
+    if (!this.usingClass || this.attacking || this.hurting || !this.anims.exists(CLASS_ANIM.attack)) return;
     this.player.setFlipX(targetX < this.player.x);
     this.attacking = true;
     this.player.play(CLASS_ANIM.attack, true);
@@ -497,6 +524,17 @@ export class DungeonScene extends Phaser.Scene {
     body.setSize(bodyW, bodyH);
     body.setOffset((CLASS_FRAME.width - bodyW) / 2, feetY - bodyH);
     body.setCollideWorldBounds(false);
+  }
+
+  private playPlayerDeath(): void {
+    this.attacking = false;
+    this.hurting = false;
+    this.player.off(`animationcomplete-${CLASS_ANIM.hurt}`);
+    if (this.usingClass && this.anims.exists(CLASS_ANIM.death)) {
+      this.player.play(CLASS_ANIM.death, true);
+      return;
+    }
+    this.player.setTint(0xff6b6b);
   }
 
   private updateFacing(dx: number, dy: number): void {

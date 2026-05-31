@@ -47,6 +47,8 @@ export const TEX = {
   classIdle: "tex-class-idle",
   classWalk: "tex-class-walk",
   classAttack: "tex-class-attack",
+  classHurt: "tex-class-hurt",
+  classDeath: "tex-class-death",
   mercSword: "tex-merc-sword",
   mercBow: "tex-merc-bow",
   mercMage: "tex-merc-mage",
@@ -87,6 +89,8 @@ export const CLASS_ANIM = {
   idle: "class-idle",
   walk: "class-walk",
   attack: "class-attack",
+  hurt: "class-hurt",
+  death: "class-death",
 } as const;
 
 export const CLASS_FRAME = { width: 100, height: 100 } as const;

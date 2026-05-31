@@ -1,7 +1,7 @@
 import { CLASS_ASSET_BASE } from "../config";
 
 export type EnemyId = "slime" | "rusher" | "brute";
-export type EnemyAnimKind = "idle" | "walk" | "death";
+export type EnemyAnimKind = "idle" | "walk" | "hurt" | "death";
 
 export const ENEMY_FRAME = { width: 100, height: 100 } as const;
 
@@ -69,6 +69,7 @@ export const enemyAnimKey = (id: EnemyId, kind: EnemyAnimKind): string => `enemy
 const ANIM_FILE: Record<EnemyAnimKind, string> = {
   idle: "Idle",
   walk: "Walk",
+  hurt: "Hurt",
   death: "Death",
 };
 
