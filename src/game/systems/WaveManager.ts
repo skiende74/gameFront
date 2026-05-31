@@ -19,6 +19,8 @@ export class WaveManager {
   private readonly getPlayer: () => Phaser.Physics.Arcade.Sprite | undefined;
   private readonly group: Phaser.Physics.Arcade.Group;
   private spawnAccumMs = 0;
+  /** 튜토리얼에서 특정 단계 전까지 적 스폰을 멈추기 위한 토글. */
+  spawnEnabled = true;
 
   constructor(
     scene: Phaser.Scene,
@@ -48,7 +50,7 @@ export class WaveManager {
       if (enemy.active) enemy.chase(player.x, player.y);
     }
 
-    if (this.state.over) return;
+    if (this.state.over || !this.spawnEnabled) return;
 
     this.spawnAccumMs += deltaMs;
     if (this.spawnAccumMs < SPAWN_INTERVAL_MS) return;

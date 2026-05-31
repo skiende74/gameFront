@@ -33,12 +33,16 @@ export class GameState extends Phaser.Events.EventEmitter {
   party: string[] = [];
   over = false;
   upgradePending = false;
+  /** 튜토리얼 모드에서는 false로 두어 시간 경과에 따른 자동 웨이브/승리 처리를 막는다. */
+  autoProgress = true;
 
   /** 매 프레임 호출되어 경과 시간과 웨이브를 진행시킨다. */
   tick(deltaMs: number): void {
     if (this.over || this.upgradePending) return;
     this.elapsedSec = Math.min(HUD.totalTimeSec, this.elapsedSec + deltaMs / 1000);
     this.emit(GAME_EVENT.time, this.elapsedSec);
+
+    if (!this.autoProgress) return;
 
     if (this.elapsedSec >= HUD.totalTimeSec) {
       this.finish(true);
@@ -48,6 +52,11 @@ export class GameState extends Phaser.Events.EventEmitter {
     if (this.wave < HUD.totalWaves && this.elapsedSec >= this.wave * HUD.waveSec) {
       this.requestUpgrade();
     }
+  }
+
+  /** 튜토리얼에서 카드 선택 단계를 직접 띄우기 위해 업그레이드 요청을 강제한다. */
+  forceUpgradeRequest(): void {
+    this.requestUpgrade();
   }
 
   addKill(scoreValue = 0): void {

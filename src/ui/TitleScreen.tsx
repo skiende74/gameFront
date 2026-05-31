@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingsModal } from "./SettingsModal";
 import { ControlsModal } from "./ControlsModal";
-import { TutorialModal } from "./TutorialModal";
 import { MercenaryRow } from "./MercenaryRow";
 import { Torch } from "./Torch";
 import { playCancel, playConfirm, playHover, playOpen } from "../audio/sfx";
 
-type Props = { onStart: () => void };
+type Props = { onStart: () => void; onTutorial: () => void };
 
-type ModalKey = "settings" | "controls" | "tutorial" | null;
+type ModalKey = "settings" | "controls" | null;
 
 type MenuItem = {
   id: string;
@@ -17,7 +16,7 @@ type MenuItem = {
   primary?: boolean;
 };
 
-export function TitleScreen({ onStart }: Props) {
+export function TitleScreen({ onStart, onTutorial }: Props) {
   const [openModal, setOpenModal] = useState<ModalKey>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
@@ -49,12 +48,12 @@ export function TitleScreen({ onStart }: Props) {
         id: "tutorial",
         label: "튜토리얼",
         onActivate: () => {
-          setOpenModal("tutorial");
-          playOpen();
+          playConfirm();
+          onTutorial();
         },
       },
     ],
-    [onStart],
+    [onStart, onTutorial],
   );
 
   useEffect(() => {
@@ -202,7 +201,6 @@ export function TitleScreen({ onStart }: Props) {
 
       <SettingsModal open={openModal === "settings"} onClose={closeModal} />
       <ControlsModal open={openModal === "controls"} onClose={closeModal} />
-      <TutorialModal open={openModal === "tutorial"} onClose={closeModal} />
     </div>
   );
 }

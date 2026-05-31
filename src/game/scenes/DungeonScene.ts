@@ -19,6 +19,7 @@ import {
 import { GameHud } from "../hud/GameHud";
 import { PauseMenu } from "../hud/PauseMenu";
 import { GameOverMenu } from "../hud/GameOverMenu";
+import { TutorialGuide } from "../hud/TutorialGuide";
 import {
   GAME_EVENT,
   GameState,
@@ -59,6 +60,7 @@ export class DungeonScene extends Phaser.Scene {
   private hud?: GameHud;
   private pauseMenu?: PauseMenu;
   private overMenu?: GameOverMenu;
+  private tutorial?: TutorialGuide;
   private paused = false;
   private gameOver = false;
   private waitingForUpgrade = false;
@@ -147,6 +149,23 @@ export class DungeonScene extends Phaser.Scene {
     window.addEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
     this.events.once("shutdown", this.cleanupScene, this);
     this.events.once("destroy", this.cleanupScene, this);
+
+    if (this.registry.get("tutorial") === true) this.startTutorial();
+  }
+
+  /** 튜토리얼 모드: 자동 진행을 끄고 안내 가이드를 시작한다. */
+  private startTutorial(): void {
+    this.state.autoProgress = false;
+    if (this.waves) this.waves.spawnEnabled = false;
+
+    this.tutorial = new TutorialGuide(this, this.hud!, {
+      enableSpawn: () => {
+        if (this.waves) this.waves.spawnEnabled = true;
+      },
+      forceCard: () => this.state.forceUpgradeRequest(),
+      exit: () => window.dispatchEvent(new CustomEvent(GAME_EXIT_EVENT)),
+    });
+    this.tutorial.start();
   }
 
   private onGameOver(payload: GameOverPayload): void {
@@ -263,6 +282,7 @@ export class DungeonScene extends Phaser.Scene {
     this.state.tick(delta);
     this.waves?.update(delta);
     this.mercs?.update(delta);
+    this.tutorial?.update(delta, moving);
   }
 
   private onUpgradeRequest(payload: UpgradeRequestPayload): void {
@@ -364,6 +384,8 @@ export class DungeonScene extends Phaser.Scene {
       window.removeEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
       this.upgradeSelectedHandler = undefined;
     }
+    this.tutorial?.destroy();
+    this.tutorial = undefined;
   }
 
   private createInfiniteFloor(): void {

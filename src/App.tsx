@@ -7,17 +7,27 @@ import { PhaserGame } from "./game/PhaserGame.tsx";
 
 function TitlePage() {
   const navigate = useNavigate();
-  return <TitleScreen onStart={() => navigate("/game")} />;
+  return <TitleScreen onStart={() => navigate("/game")} onTutorial={() => navigate("/game?tutorial=1")} />;
 }
 
 function GamePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedClass = searchParams.get("class");
+  const isTutorial = searchParams.get("tutorial") === "1";
 
   useEventListener("game:exit", () => {
-    if (selectedClass) navigate("/");
+    if (selectedClass || isTutorial) navigate("/");
   });
+
+  if (isTutorial) {
+    return (
+      <>
+        <PhaserGame classId="sword" tutorial />
+        <UpgradeModal />
+      </>
+    );
+  }
 
   if (!selectedClass) {
     return (

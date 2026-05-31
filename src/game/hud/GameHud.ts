@@ -79,6 +79,38 @@ export class GameHud {
     this.syncParty(this.state.party);
   }
 
+  /** 튜토리얼 코치마크가 강조할 HUD 영역(스크린 좌표) 사각형을 반환한다. */
+  getRegions(): Record<"hp" | "timer" | "wave" | "mercBar", Phaser.Geom.Rectangle> {
+    const panelW = 156;
+    const box = HUD.slotBox;
+    const n = Math.max(1, this.slots.length);
+    const totalW = n * box + (n - 1) * HUD.slotGap;
+    const mercX = (GAME_WIDTH - totalW) / 2;
+    const mercTop = GAME_HEIGHT - HUD.margin - box - 14;
+
+    return {
+      hp: new Phaser.Geom.Rectangle(
+        this.hpPanel.x,
+        this.hpPanel.y,
+        this.hpPanel.w,
+        this.hpPanel.h + 8 + this.statsPanel.h,
+      ),
+      timer: new Phaser.Geom.Rectangle(
+        (GAME_WIDTH - panelW) / 2,
+        HUD.margin,
+        panelW,
+        HUD.panelHeight,
+      ),
+      wave: new Phaser.Geom.Rectangle(
+        GAME_WIDTH - HUD.margin - panelW,
+        HUD.margin,
+        panelW,
+        HUD.panelHeight,
+      ),
+      mercBar: new Phaser.Geom.Rectangle(mercX - 8, mercTop, totalW + 16, box + 24),
+    };
+  }
+
   private onTime(): void {
     this.refreshTimer();
     this.refreshWave();
