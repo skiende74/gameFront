@@ -79,7 +79,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   private flashHit(): void {
     this.setTint(0xffffff);
-    this.setTintFill();
+    this.setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(70, () => {
       if (this.active && !this.dying) this.clearTint();
     });
