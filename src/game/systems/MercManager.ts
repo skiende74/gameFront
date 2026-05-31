@@ -122,7 +122,7 @@ export class MercManager {
   private performAttack(combat: MercCombat, x: number, y: number, target: Enemy): void {
     switch (combat.role) {
       case "melee": {
-        if (target.takeDamage(combat.atk)) this.state.addKill();
+        if (target.takeDamage(combat.atk)) this.state.addKill(target.def.score);
         this.meleeSlash(x, y, target.x, target.y);
         break;
       }

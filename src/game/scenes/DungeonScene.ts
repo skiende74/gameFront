@@ -19,7 +19,12 @@ import {
 import { GameHud } from "../hud/GameHud";
 import { PauseMenu } from "../hud/PauseMenu";
 import { GameOverMenu } from "../hud/GameOverMenu";
-import { GAME_EVENT, GameState, type GameOverPayload } from "../state/GameState";
+import {
+  GAME_EVENT,
+  GameState,
+  type GameOverPayload,
+  type UpgradeRequestPayload,
+} from "../state/GameState";
 import { Enemy, ensureEnemyAnimations } from "../entities/Enemy";
 import { ensureMercAnimations } from "../entities/Mercenary";
 import { WaveManager } from "../systems/WaveManager";
@@ -27,6 +32,8 @@ import { ProjectileManager } from "../systems/ProjectileManager";
 import { MercManager } from "../systems/MercManager";
 
 const GAME_EXIT_EVENT = "game:exit";
+const UPGRADE_REQUEST_EVENT = "game:upgrade-request";
+const UPGRADE_SELECTED_EVENT = "game:upgrade-selected";
 const TORCH_ANIM_KEY = "torch-burn";
 const HURT_IFRAME_MS = 700;
 
@@ -53,6 +60,9 @@ export class DungeonScene extends Phaser.Scene {
   private overMenu?: GameOverMenu;
   private paused = false;
   private gameOver = false;
+  private waitingForUpgrade = false;
+  private upgradeOverlay?: Phaser.GameObjects.Container;
+  private upgradeSelectedHandler?: EventListener;
   private hurtCooldown = 0;
   private state!: GameState;
   private waves?: WaveManager;
@@ -124,13 +134,21 @@ export class DungeonScene extends Phaser.Scene {
     );
     this.overMenu.build();
     this.state.on(GAME_EVENT.over, this.onGameOver, this);
+    this.state.on(GAME_EVENT.upgradeRequest, this.onUpgradeRequest, this);
 
     this.input.keyboard?.on("keydown-ESC", () => this.togglePause());
+
+    this.upgradeSelectedHandler = () => this.completeUpgradeWait();
+    window.addEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
+    this.events.once("shutdown", this.cleanupScene, this);
+    this.events.once("destroy", this.cleanupScene, this);
   }
 
   private onGameOver(payload: GameOverPayload): void {
     if (this.gameOver) return;
     this.gameOver = true;
+    this.waitingForUpgrade = false;
+    this.hideUpgradeWait();
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
@@ -141,12 +159,14 @@ export class DungeonScene extends Phaser.Scene {
       victory: payload.victory,
       elapsedSec: this.state.elapsedSec,
       kills: this.state.kills,
+      score: this.state.score,
+      finalScore: this.state.finalScore,
       wave: this.state.wave,
     });
   }
 
   private togglePause(): void {
-    if (this.gameOver) return;
+    if (this.gameOver || this.waitingForUpgrade) return;
     this.setPaused(!this.paused);
   }
 
@@ -170,7 +190,7 @@ export class DungeonScene extends Phaser.Scene {
     _player: Phaser.GameObjects.GameObject,
     enemyObj: Phaser.GameObjects.GameObject,
   ): void {
-    if (this.paused || this.hurtCooldown > 0 || this.state.over) return;
+    if (this.paused || this.waitingForUpgrade || this.hurtCooldown > 0 || this.state.over) return;
     const enemy = enemyObj as Enemy;
     if (!enemy.targetable) return;
 
@@ -188,7 +208,7 @@ export class DungeonScene extends Phaser.Scene {
 
   update(_time: number, delta: number): void {
     if (!this.keys || !this.player) return;
-    if (this.paused || this.gameOver) return;
+    if (this.paused || this.gameOver || this.waitingForUpgrade) return;
 
     if (this.hurtCooldown > 0) this.hurtCooldown -= delta;
 
@@ -225,6 +245,71 @@ export class DungeonScene extends Phaser.Scene {
     this.state.tick(delta);
     this.waves?.update(delta);
     this.mercs?.update(delta);
+  }
+
+  private onUpgradeRequest(payload: UpgradeRequestPayload): void {
+    if (this.gameOver) return;
+    this.waitingForUpgrade = true;
+
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    body.setVelocity(0, 0);
+    this.physics.world.pause();
+    this.showUpgradeWait(payload);
+
+    window.dispatchEvent(new CustomEvent(UPGRADE_REQUEST_EVENT, { detail: payload }));
+  }
+
+  private completeUpgradeWait(): void {
+    if (!this.waitingForUpgrade || this.gameOver) return;
+    this.waitingForUpgrade = false;
+    this.hideUpgradeWait();
+    this.state.completeUpgrade();
+    this.physics.world.resume();
+  }
+
+  private showUpgradeWait(payload: UpgradeRequestPayload): void {
+    this.hideUpgradeWait();
+
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+    const overlay = this.add.container(0, 0).setScrollFactor(0).setDepth(95);
+    const scrim = this.add
+      .rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0.66)
+      .setInteractive();
+    const panel = this.add
+      .rectangle(cx, cy, 460, 190, 0x0a0610, 0.98)
+      .setStrokeStyle(2, 0xffd54a, 0.82);
+    const title = this.add
+      .text(cx, cy - 38, `웨이브 ${payload.completedWave} 종료`, {
+        fontFamily: "Galmuri11, monospace",
+        fontSize: "30px",
+        color: "#ffd58a",
+      })
+      .setOrigin(0.5);
+    const body = this.add
+      .text(cx, cy + 22, `업그레이드 선택 대기\n다음 웨이브 ${payload.nextWave} / 20`, {
+        fontFamily: "Galmuri11, monospace",
+        fontSize: "17px",
+        color: "#ece2c8",
+        align: "center",
+        lineSpacing: 8,
+      })
+      .setOrigin(0.5);
+
+    overlay.add([scrim, panel, title, body]);
+    this.upgradeOverlay = overlay;
+  }
+
+  private hideUpgradeWait(): void {
+    this.upgradeOverlay?.destroy(true);
+    this.upgradeOverlay = undefined;
+  }
+
+  private cleanupScene(): void {
+    if (this.upgradeSelectedHandler) {
+      window.removeEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
+      this.upgradeSelectedHandler = undefined;
+    }
   }
 
   private createInfiniteFloor(): void {

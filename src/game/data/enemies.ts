@@ -13,6 +13,7 @@ export type EnemyDef = {
   hp: number;
   speed: number;
   damage: number;
+  score: number;
   scale: number;
   /** 100px 프레임에서 발이 닿는 세로 비율(원점) */
   feetRatio: number;
@@ -29,6 +30,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 10,
     speed: 80,
     damage: 10,
+    score: 10,
     scale: 3.3,
     feetRatio: 0.62,
     body: { w: 30, h: 26 },
@@ -40,6 +42,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 6,
     speed: 140,
     damage: 10,
+    score: 15,
     scale: 3.4,
     feetRatio: 0.62,
     body: { w: 30, h: 28 },
@@ -51,6 +54,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 30,
     speed: 50,
     damage: 15,
+    score: 30,
     scale: 4.2,
     feetRatio: 0.62,
     body: { w: 40, h: 34 },

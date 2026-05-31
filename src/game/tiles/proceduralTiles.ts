@@ -99,10 +99,22 @@ function drawCorner(g: Phaser.GameObjects.Graphics, corner: "tl" | "tr" | "bl" |
   g.fillRect(0, 0, T, T);
 
   g.fillStyle(COLORS.wallLo, 1);
-  if (corner === "tl") g.fillRect(0, 0, 4, T), g.fillRect(0, 0, T, 4);
-  if (corner === "tr") g.fillRect(T - 4, 0, 4, T), g.fillRect(0, 0, T, 4);
-  if (corner === "bl") g.fillRect(0, 0, 4, T), g.fillRect(0, T - 4, T, 4);
-  if (corner === "br") g.fillRect(T - 4, 0, 4, T), g.fillRect(0, T - 4, T, 4);
+  if (corner === "tl") {
+    g.fillRect(0, 0, 4, T);
+    g.fillRect(0, 0, T, 4);
+  }
+  if (corner === "tr") {
+    g.fillRect(T - 4, 0, 4, T);
+    g.fillRect(0, 0, T, 4);
+  }
+  if (corner === "bl") {
+    g.fillRect(0, 0, 4, T);
+    g.fillRect(0, T - 4, T, 4);
+  }
+  if (corner === "br") {
+    g.fillRect(T - 4, 0, 4, T);
+    g.fillRect(0, T - 4, T, 4);
+  }
 
   g.fillStyle(COLORS.wallEdge, 0.7);
   const cs = 4;

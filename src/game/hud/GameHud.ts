@@ -34,12 +34,20 @@ export class GameHud {
   private waveProgress!: Phaser.GameObjects.Graphics;
   private hpFill!: Phaser.GameObjects.Graphics;
   private hpValueText!: Phaser.GameObjects.Text;
+  private killsText!: Phaser.GameObjects.Text;
+  private scoreText!: Phaser.GameObjects.Text;
 
   private mercBar!: Phaser.GameObjects.Container;
   private readonly slots: MercSlot[] = [];
 
   private readonly hpPanel = { x: HUD.margin, y: HUD.margin, w: 264, h: HUD.panelHeight };
   private readonly hpBar = { x: HUD.margin + 14, y: HUD.margin + 30, w: 236, h: 14 };
+  private readonly statsPanel = {
+    x: HUD.margin,
+    y: HUD.margin + HUD.panelHeight + 8,
+    w: 264,
+    h: 42,
+  };
   private readonly waveBarGeom = { w: 124, h: 6 };
 
   constructor(scene: Phaser.Scene, state: GameState) {
@@ -61,8 +69,11 @@ export class GameHud {
     this.state.on(GAME_EVENT.wave, this.onWave, this);
     this.state.on(GAME_EVENT.hp, this.refreshHp, this);
     this.state.on(GAME_EVENT.party, this.syncParty, this);
+    this.state.on(GAME_EVENT.kills, this.refreshStats, this);
+    this.state.on(GAME_EVENT.score, this.refreshStats, this);
 
     this.refreshHp();
+    this.refreshStats();
     this.refreshTimer();
     this.refreshWave();
     this.syncParty(this.state.party);
@@ -127,6 +138,32 @@ export class GameHud {
     this.layer.add(this.hpValueText);
     this.hpFill = this.scene.add.graphics().setScrollFactor(0);
     this.layer.add(this.hpFill);
+
+    this.layer.add(
+      this.panel(
+        this.statsPanel.x,
+        this.statsPanel.y,
+        this.statsPanel.w,
+        this.statsPanel.h,
+        0xffd54a,
+      ),
+    );
+    this.killsText = this.scene.add
+      .text(this.statsPanel.x + 14, this.statsPanel.y + 12, "", {
+        fontFamily: FONT,
+        fontSize: "14px",
+        color: COLOR.bone,
+      })
+      .setScrollFactor(0);
+    this.scoreText = this.scene.add
+      .text(this.statsPanel.x + this.statsPanel.w - 14, this.statsPanel.y + 12, "", {
+        fontFamily: FONT,
+        fontSize: "14px",
+        color: COLOR.timer,
+      })
+      .setOrigin(1, 0)
+      .setScrollFactor(0);
+    this.layer.add([this.killsText, this.scoreText]);
 
     const timerW = 156;
     const timerX = (width - timerW) / 2;
@@ -194,6 +231,11 @@ export class GameHud {
       );
     }
     this.hpValueText.setText(`${Math.ceil(this.state.hp)} / ${this.state.maxHp}`);
+  }
+
+  private refreshStats(): void {
+    this.killsText.setText(`처치 ${this.state.kills}`);
+    this.scoreText.setText(`점수 ${this.state.score}`);
   }
 
   private refreshTimer(): void {

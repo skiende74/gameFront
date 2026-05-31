@@ -93,7 +93,7 @@ export class ProjectileManager {
     if (p.aoe > 0) {
       this.explode(p.x, p.y, p.aoe, p.damage);
     } else {
-      if (e.takeDamage(p.damage)) this.state.addKill();
+      if (e.takeDamage(p.damage)) this.state.addKill(e.def.score);
     }
     p.deactivate();
   }
@@ -104,7 +104,7 @@ export class ProjectileManager {
       const e = obj as Enemy;
       if (!e.targetable) continue;
       if (Phaser.Math.Distance.Between(cx, cy, e.x, e.y) <= radius) {
-        if (e.takeDamage(damage)) this.state.addKill();
+        if (e.takeDamage(damage)) this.state.addKill(e.def.score);
       }
     }
     this.spawnExplosion(cx, cy, radius);

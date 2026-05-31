@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingsModal } from "./SettingsModal";
 import { ControlsModal } from "./ControlsModal";
 import { TutorialModal } from "./TutorialModal";
@@ -26,33 +26,36 @@ export function TitleScreen({ onStart }: Props) {
     playCancel();
   }, []);
 
-  const items: MenuItem[] = [
-    { id: "start", label: "시작", onActivate: onStart, primary: true },
-    {
-      id: "settings",
-      label: "설정",
-      onActivate: () => {
-        setOpenModal("settings");
-        playOpen();
+  const items = useMemo<MenuItem[]>(
+    () => [
+      { id: "start", label: "시작", onActivate: onStart, primary: true },
+      {
+        id: "settings",
+        label: "설정",
+        onActivate: () => {
+          setOpenModal("settings");
+          playOpen();
+        },
       },
-    },
-    {
-      id: "controls",
-      label: "조작법",
-      onActivate: () => {
-        setOpenModal("controls");
-        playOpen();
+      {
+        id: "controls",
+        label: "조작법",
+        onActivate: () => {
+          setOpenModal("controls");
+          playOpen();
+        },
       },
-    },
-    {
-      id: "tutorial",
-      label: "튜토리얼",
-      onActivate: () => {
-        setOpenModal("tutorial");
-        playOpen();
+      {
+        id: "tutorial",
+        label: "튜토리얼",
+        onActivate: () => {
+          setOpenModal("tutorial");
+          playOpen();
+        },
       },
-    },
-  ];
+    ],
+    [onStart],
+  );
 
   useEffect(() => {
     if (openModal) return;
@@ -98,7 +101,7 @@ export function TitleScreen({ onStart }: Props) {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-dungeon-deepest select-none">
+    <div className="title-screen relative w-screen h-screen overflow-hidden bg-dungeon-deepest select-none">
       <div className="absolute inset-0 stone-wall" />
 
       <div
@@ -125,13 +128,13 @@ export function TitleScreen({ onStart }: Props) {
       <Torch side="left" />
       <Torch side="right" />
 
-      <div className="relative z-10 flex flex-col items-center h-full px-4 pt-4 pb-3">
+      <div className="title-shell relative z-10 flex flex-col items-center h-full px-4 pt-4 pb-3">
         <div className="intro intro-0 text-[9px] md:text-[10px] tracking-[0.3em] text-ash-grey font-pixel-en uppercase whitespace-nowrap mb-3">
           DACON Monthly Hackathon · Web Mini Game
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 md:gap-9 w-full">
-          <div className="intro intro-1 text-center float-y">
+        <div className="title-stack flex-1 flex flex-col items-center justify-center gap-6 md:gap-9 w-full">
+          <div className="title-logo intro intro-1 text-center float-y">
             <div
               className="font-pixel-en text-torch-flame/70 text-[8px] md:text-[10px] mb-2 flex items-center justify-center gap-2"
               aria-hidden="true"
@@ -140,7 +143,7 @@ export function TitleScreen({ onStart }: Props) {
               <span>◆</span>
               <span className="inline-block h-px w-10 md:w-20 bg-torch-flame/50" />
             </div>
-            <h1 className="font-pixel-ko text-5xl md:text-8xl font-bold text-bone-white mb-4 md:mb-5 title-glow tracking-wider">
+            <h1 className="title-heading font-pixel-ko text-5xl md:text-8xl font-bold text-bone-white mb-4 md:mb-5 title-glow tracking-wider">
               10분 용병단
             </h1>
             <div className="font-pixel-en text-[10px] md:text-sm text-torch-core tracking-[0.3em] mb-2">
@@ -157,7 +160,7 @@ export function TitleScreen({ onStart }: Props) {
             <div className="font-pixel-ko text-sm md:text-base text-bone-white/85">무기가 아닌, 동료를 빌드하라</div>
           </div>
 
-          <nav className="flex flex-col items-stretch gap-2.5 w-full max-w-[280px]" aria-label="메인 메뉴">
+          <nav className="title-menu flex flex-col items-stretch gap-2.5 w-full max-w-[280px]" aria-label="메인 메뉴">
             {items.map((item, i) => (
               <button
                 key={item.id}
@@ -181,11 +184,11 @@ export function TitleScreen({ onStart }: Props) {
             ))}
           </nav>
 
-          <div className="flex flex-col items-center gap-3 -mt-6 md:-mt-10">
+          <div className="title-merc-section flex flex-col items-center gap-3 -mt-6 md:-mt-10">
             <div className="intro intro-6">
               <MercenaryRow />
             </div>
-            <div className="intro intro-7 flex flex-col items-center gap-1">
+            <div className="title-footer intro intro-7 flex flex-col items-center gap-1">
               <div className="text-[8px] md:text-[9px] text-ash-grey/55 font-pixel-en tracking-[0.2em] whitespace-nowrap">
                 [▲▼ / WS] 이동 · [ENTER] 선택 · [ESC] 닫기
               </div>

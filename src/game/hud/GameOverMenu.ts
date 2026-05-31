@@ -21,6 +21,8 @@ export type ResultStats = {
   /** 생존 시간(초) */
   elapsedSec: number;
   kills: number;
+  score: number;
+  finalScore: number;
   wave: number;
 };
 
@@ -128,7 +130,15 @@ export class GameOverMenu {
     this.titleText
       .setText(stats.victory ? "생존 성공!" : "패배")
       .setColor(stats.victory ? "#ffd54a" : "#ff6b6b");
-    this.statText.setText([`생존 시간   ${time}`, `처치한 적   ${stats.kills}`, `도달 웨이브  ${stats.wave} / 20`].join("\n"));
+    this.statText.setText(
+      [
+        `생존 시간   ${time}`,
+        `처치한 적   ${stats.kills}`,
+        `처치 점수   ${stats.score}`,
+        `최종 점수   ${stats.finalScore}`,
+        `도달 웨이브  ${stats.wave} / 20`,
+      ].join("\n"),
+    );
 
     this.visible = true;
     this.setShown(true);

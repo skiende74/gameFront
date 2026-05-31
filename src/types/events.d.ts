@@ -2,6 +2,8 @@
 declare global {
   interface WindowEventMap {
     "game:exit": CustomEvent;
+    "game:upgrade-request": CustomEvent<{ completedWave: number; nextWave: number }>;
+    "game:upgrade-selected": CustomEvent<{ upgradeId?: string }>;
   }
 }
 
