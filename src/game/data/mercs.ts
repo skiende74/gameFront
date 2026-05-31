@@ -20,7 +20,7 @@ export type MercCombat = {
 };
 
 export const MERC_COMBAT: Record<string, MercCombat> = {
-  sword: { id: "sword", role: "melee", atk: 16, range: 80, cooldownMs: 800, scale: 3, feetRatio: 0.58 },
+  sword: { id: "sword", role: "melee", atk: 16, range: 110, cooldownMs: 800, scale: 3, feetRatio: 0.58 },
   bow: {
     id: "bow",
     role: "ranged",
