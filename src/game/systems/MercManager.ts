@@ -6,8 +6,8 @@ import { GAME_EVENT, type GameState } from "../state/GameState";
 import type { ProjectileManager } from "./ProjectileManager";
 
 const CLUMP_COLUMNS = 5;
-const CLUMP_SPACING_X = 18;
-const CLUMP_SPACING_Y = 10;
+const CLUMP_SPACING_X = 32;
+const CLUMP_SPACING_Y = 20;
 const CLUMP_Y_OFFSET = 14;
 
 /**
