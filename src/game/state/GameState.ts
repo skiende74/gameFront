@@ -26,7 +26,10 @@ export class GameState extends Phaser.Events.EventEmitter {
   kills = 0;
   score = 0;
   hp: number = HUD.playerMaxHp;
-  readonly maxHp: number = HUD.playerMaxHp;
+  maxHp: number = HUD.playerMaxHp;
+  mercenaryDamageMultiplier = 1;
+  mercenaryAttackSpeedMultiplier = 1;
+  playerSpeedMultiplier = 1;
   party: string[] = [];
   over = false;
   upgradePending = false;
@@ -69,6 +72,24 @@ export class GameState extends Phaser.Events.EventEmitter {
   healPlayer(amount: number): void {
     this.hp = Phaser.Math.Clamp(this.hp + amount, 0, this.maxHp);
     this.emit(GAME_EVENT.hp, this.hp);
+  }
+
+  increaseMaxHp(amount: number): void {
+    this.maxHp += amount;
+    this.hp = Phaser.Math.Clamp(this.hp + amount, 0, this.maxHp);
+    this.emit(GAME_EVENT.hp, this.hp);
+  }
+
+  boostMercenaryDamage(ratio: number): void {
+    this.mercenaryDamageMultiplier *= 1 + ratio;
+  }
+
+  boostMercenaryAttackSpeed(ratio: number): void {
+    this.mercenaryAttackSpeedMultiplier *= 1 + ratio;
+  }
+
+  boostPlayerSpeed(ratio: number): void {
+    this.playerSpeedMultiplier *= 1 + ratio;
   }
 
   completeUpgrade(): void {

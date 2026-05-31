@@ -51,7 +51,10 @@ export class MercManager {
     const wanted = Math.max(0, party.length - 1);
     while (this.mercs.length < wanted) {
       const id = party[this.mercs.length + 1];
-      this.mercs.push(new Mercenary(this.scene, id));
+      const merc = new Mercenary(this.scene, id);
+      const player = this.getPlayer();
+      if (player) merc.setPosition(player.x, player.y);
+      this.mercs.push(merc);
     }
   }
 
@@ -81,7 +84,7 @@ export class MercManager {
 
     if (combat.role === "heal") {
       if (this.playerCooldown <= 0) {
-        this.playerCooldown = combat.cooldownMs;
+        this.playerCooldown = this.cooldownFor(combat);
         this.onPlayerAttack?.(player.x);
         this.state.healPlayer(combat.heal ?? 0);
         this.healPulse(player.x, player.y);
@@ -92,7 +95,7 @@ export class MercManager {
     const target = this.nearestEnemy(player.x, player.y, combat.range);
     if (!target) return;
     if (this.playerCooldown > 0) return;
-    this.playerCooldown = combat.cooldownMs;
+    this.playerCooldown = this.cooldownFor(combat);
     this.onPlayerAttack?.(target.x);
     this.performAttack(combat, player.x, player.y, target);
   }
@@ -100,7 +103,7 @@ export class MercManager {
   private runCombat(merc: Mercenary, player: Phaser.Physics.Arcade.Sprite): void {
     if (merc.combat.role === "heal") {
       if (merc.ready) {
-        merc.resetCooldown();
+        merc.resetCooldown(this.cooldownFor(merc.combat));
         merc.playAttackCue();
         this.state.healPlayer(merc.combat.heal ?? 0);
         this.healPulse(player.x, player.y);
@@ -113,26 +116,35 @@ export class MercManager {
 
     merc.faceTo(target.x);
     if (!merc.ready) return;
-    merc.resetCooldown();
+    merc.resetCooldown(this.cooldownFor(merc.combat));
     merc.playAttackCue();
     this.performAttack(merc.combat, merc.x, merc.y, target);
   }
 
   /** 역할별 실제 타격/투사체 발사. 플레이어와 용병이 공유한다. */
   private performAttack(combat: MercCombat, x: number, y: number, target: Enemy): void {
+    const damage = this.damageFor(combat);
     switch (combat.role) {
       case "melee": {
-        if (target.takeDamage(combat.atk)) this.state.addKill(target.def.score);
+        if (target.takeDamage(damage)) this.state.addKill(target.def.score);
         this.meleeSlash(x, y, target.x, target.y);
         break;
       }
       case "ranged":
-        this.projectiles.fireArrow(x, y - 24, target.x, target.y, combat.atk);
+        this.projectiles.fireArrow(x, y - 24, target.x, target.y, damage);
         break;
       case "aoe":
-        this.projectiles.fireMagic(x, y - 24, target.x, target.y, combat.atk, combat.aoeRadius ?? 60);
+        this.projectiles.fireMagic(x, y - 24, target.x, target.y, damage, combat.aoeRadius ?? 60);
         break;
     }
+  }
+
+  private damageFor(combat: MercCombat): number {
+    return Math.max(1, Math.round(combat.atk * this.state.mercenaryDamageMultiplier));
+  }
+
+  private cooldownFor(combat: MercCombat): number {
+    return combat.cooldownMs / this.state.mercenaryAttackSpeedMultiplier;
   }
 
   private nearestEnemy(x: number, y: number, range: number): Enemy | null {

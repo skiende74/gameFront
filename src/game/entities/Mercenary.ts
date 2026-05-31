@@ -63,8 +63,8 @@ export class Mercenary extends Phaser.GameObjects.Sprite {
     return this.cooldownLeft <= 0;
   }
 
-  resetCooldown(): void {
-    this.cooldownLeft = this.combat.cooldownMs;
+  resetCooldown(cooldownMs = this.combat.cooldownMs): void {
+    this.cooldownLeft = cooldownMs;
   }
 
   /** 공격 순간의 가벼운 시각 피드백(살짝 커졌다 돌아옴). */

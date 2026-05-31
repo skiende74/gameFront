@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useNavigate, useSearchParams } from "react-rou
 import { useEventListener } from "usehooks-ts";
 import { TitleScreen } from "./ui/TitleScreen.tsx";
 import { CharacterSelectModal } from "./ui/CharacterSelectModal.tsx";
+import { UpgradeModal } from "./ui/UpgradeModal.tsx";
 import { PhaserGame } from "./game/PhaserGame.tsx";
 
 function TitlePage() {
@@ -46,7 +47,12 @@ function GamePage() {
     );
   }
 
-  return <PhaserGame classId={selectedClass} />;
+  return (
+    <>
+      <PhaserGame classId={selectedClass} />
+      <UpgradeModal />
+    </>
+  );
 }
 
 function App() {

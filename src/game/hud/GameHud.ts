@@ -239,9 +239,9 @@ export class GameHud {
   }
 
   private refreshTimer(): void {
-    const elapsed = Math.floor(this.state.elapsedSec);
-    const mm = Math.floor(elapsed / 60);
-    const ss = elapsed % 60;
+    const remaining = Math.max(0, Math.ceil(HUD.totalTimeSec - this.state.elapsedSec));
+    const mm = Math.floor(remaining / 60);
+    const ss = remaining % 60;
     this.timerText.setText(`${mm}:${ss.toString().padStart(2, "0")}`);
   }
 

@@ -30,6 +30,7 @@ import { ensureMercAnimations } from "../entities/Mercenary";
 import { WaveManager } from "../systems/WaveManager";
 import { ProjectileManager } from "../systems/ProjectileManager";
 import { MercManager } from "../systems/MercManager";
+import { getUpgrade, type UpgradeId } from "../data/upgrades";
 
 const GAME_EXIT_EVENT = "game:exit";
 const UPGRADE_REQUEST_EVENT = "game:upgrade-request";
@@ -138,7 +139,10 @@ export class DungeonScene extends Phaser.Scene {
 
     this.input.keyboard?.on("keydown-ESC", () => this.togglePause());
 
-    this.upgradeSelectedHandler = () => this.completeUpgradeWait();
+    this.upgradeSelectedHandler = (event) => {
+      const detail = (event as CustomEvent<{ upgradeId?: string }>).detail;
+      this.completeUpgradeWait(detail?.upgradeId);
+    };
     window.addEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
     this.events.once("shutdown", this.cleanupScene, this);
     this.events.once("destroy", this.cleanupScene, this);
@@ -223,7 +227,8 @@ export class DungeonScene extends Phaser.Scene {
     const moving = dx !== 0 || dy !== 0;
     if (moving) {
       const len = Math.hypot(dx, dy);
-      body.setVelocity((dx / len) * PLAYER_SPEED, (dy / len) * PLAYER_SPEED);
+      const speed = PLAYER_SPEED * this.state.playerSpeedMultiplier;
+      body.setVelocity((dx / len) * speed, (dy / len) * speed);
       if (this.usingClass) {
         if (dx < 0) this.player.setFlipX(true);
         else if (dx > 0) this.player.setFlipX(false);
@@ -259,12 +264,48 @@ export class DungeonScene extends Phaser.Scene {
     window.dispatchEvent(new CustomEvent(UPGRADE_REQUEST_EVENT, { detail: payload }));
   }
 
-  private completeUpgradeWait(): void {
+  private completeUpgradeWait(upgradeId?: string): void {
     if (!this.waitingForUpgrade || this.gameOver) return;
+    if (upgradeId) this.applyUpgrade(upgradeId);
     this.waitingForUpgrade = false;
     this.hideUpgradeWait();
     this.state.completeUpgrade();
     this.physics.world.resume();
+  }
+
+  private applyUpgrade(upgradeId: string): void {
+    const upgrade = getUpgrade(upgradeId);
+    if (!upgrade) return;
+
+    switch (upgrade.id as UpgradeId) {
+      case "hire-sword":
+        this.state.addMerc("sword");
+        break;
+      case "hire-bow":
+        this.state.addMerc("bow");
+        break;
+      case "hire-mage":
+        this.state.addMerc("mage");
+        break;
+      case "hire-cleric":
+        this.state.addMerc("cleric");
+        break;
+      case "tactics":
+        this.state.boostMercenaryDamage(0.1);
+        break;
+      case "haste":
+        this.state.boostMercenaryAttackSpeed(0.1);
+        break;
+      case "agility":
+        this.state.boostPlayerSpeed(0.1);
+        break;
+      case "first-aid":
+        this.state.healPlayer(30);
+        break;
+      case "defense":
+        this.state.increaseMaxHp(20);
+        break;
+    }
   }
 
   private showUpgradeWait(payload: UpgradeRequestPayload): void {
