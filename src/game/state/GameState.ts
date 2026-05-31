@@ -65,7 +65,7 @@ export class GameState extends Phaser.Events.EventEmitter {
     if (!this.autoProgress) return;
     if (isBossWave(this.wave)) return;
 
-    if (this.wave < HUD.totalWaves && this.waveElapsedSec >= HUD.waveSec) {
+    if (this.wave < HUD.totalWaves && this.waveElapsedSec >= this.waveSec) {
       this.requestUpgrade();
     }
   }
@@ -126,10 +126,10 @@ export class GameState extends Phaser.Events.EventEmitter {
   completeUpgrade(): void {
     if (!this.upgradePending || this.over) return;
     this.upgradePending = false;
-    this.waveElapsedSec = 0;
     this.wave = Math.min(HUD.totalWaves, this.wave + 1);
     this.waveElapsedSec = 0;
     this.emit(GAME_EVENT.wave, this.wave);
+    this.emit(GAME_EVENT.time, this.elapsedSec);
 
     if (isBossWave(this.wave)) this.startBoss();
   }

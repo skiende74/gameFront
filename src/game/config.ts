@@ -141,8 +141,7 @@ export const HUD = {
   depth: 40,
   margin: 16,
   panelHeight: 56,
-  // 보스 4회(웨이브 5·10·15·20)는 카운트다운을 멈추므로, 일반 16웨이브×30초 = 480초.
-  totalTimeSec: 480,
+  totalTimeSec: 600,
   waveSec: 30,
   totalWaves: 20,
   playerMaxHp: 100,
