@@ -294,7 +294,7 @@ export class GameHud {
       `${this.state.wave.toString().padStart(2, "0")} / ${HUD.totalWaves}`,
     );
 
-    const inWave = Phaser.Math.Clamp(this.state.waveElapsedSec / HUD.waveSec, 0, 1);
+    const inWave = Phaser.Math.Clamp(this.state.waveElapsedSec / this.state.waveSec, 0, 1);
     const x = this.waveProgress.getData("x") as number;
     const y = this.waveProgress.getData("y") as number;
     this.waveProgress.clear();

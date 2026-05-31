@@ -9,7 +9,7 @@ import {
 } from "../data/mercs";
 
 const MERC_DEPTH = 18;
-const FOLLOW_LERP = 0.14;
+const FOLLOW_LERP = 0.24;
 const MOVE_EPSILON = 3;
 
 /** 플레이어를 따라다니며 자동 전투하는 용병 1기(시각/이동 담당). 전투 판정은 MercManager 가 조율. */
@@ -31,7 +31,7 @@ export class Mercenary extends Phaser.GameObjects.Sprite {
     this.play(mercAnimKey(id, "idle"), true);
   }
 
-  /** 대형 목표 위치로 부드럽게 이동하고 idle/walk 애니메이션을 전환한다. */
+  /** 목표 위치로 부드럽게 이동하고 idle/walk 애니메이션을 전환한다. */
   steer(targetX: number, targetY: number): void {
     const dx = targetX - this.x;
     const dy = targetY - this.y;

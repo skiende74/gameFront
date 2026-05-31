@@ -20,6 +20,7 @@ export type GameOverPayload = { victory: boolean };
 export type UpgradeRequestPayload = { completedWave: number; nextWave: number };
 export type BossStartPayload = { wave: number; bossId: EnemyId };
 export type BossEndPayload = { wave: number };
+export type GameStateOptions = { waveSec?: number };
 
 /**
  * 인게임 단일 상태 저장소. 시간·웨이브·체력·처치수·용병단을 보유하고
@@ -27,6 +28,8 @@ export type BossEndPayload = { wave: number };
  */
 export class GameState extends Phaser.Events.EventEmitter {
   elapsedSec = 0;
+  waveElapsedSec = 0;
+  waveSec: number = HUD.waveSec;
   wave = 1;
   kills = 0;
   score = 0;
@@ -39,11 +42,15 @@ export class GameState extends Phaser.Events.EventEmitter {
   over = false;
   upgradePending = false;
   /** 현재 웨이브 진행 시간(초). 웨이브가 바뀔 때마다 0으로 초기화된다. */
-  waveElapsedSec = 0;
   /** 보스 라운드 진행 중인지. 이때는 시간 경과/자동 웨이브 진행이 멈춘다. */
   bossActive = false;
   /** 튜토리얼 모드에서는 false로 두어 시간 경과에 따른 자동 웨이브 진행을 막는다. */
   autoProgress = true;
+
+  constructor(options: GameStateOptions = {}) {
+    super();
+    if (options.waveSec) this.waveSec = options.waveSec;
+  }
 
   /** 매 프레임 호출되어 경과 시간과 웨이브를 진행시킨다. */
   tick(deltaMs: number): void {
@@ -61,6 +68,12 @@ export class GameState extends Phaser.Events.EventEmitter {
     if (this.wave < HUD.totalWaves && this.waveElapsedSec >= HUD.waveSec) {
       this.requestUpgrade();
     }
+  }
+
+  setWaveSec(seconds: number): void {
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+    this.waveSec = seconds;
+    this.emit(GAME_EVENT.time, this.elapsedSec);
   }
 
   /** 튜토리얼에서 카드 선택 단계를 직접 띄우기 위해 업그레이드 요청을 강제한다. */
@@ -113,6 +126,7 @@ export class GameState extends Phaser.Events.EventEmitter {
   completeUpgrade(): void {
     if (!this.upgradePending || this.over) return;
     this.upgradePending = false;
+    this.waveElapsedSec = 0;
     this.wave = Math.min(HUD.totalWaves, this.wave + 1);
     this.waveElapsedSec = 0;
     this.emit(GAME_EVENT.wave, this.wave);
@@ -139,6 +153,7 @@ export class GameState extends Phaser.Events.EventEmitter {
     } else {
       this.requestUpgrade();
     }
+    this.emit(GAME_EVENT.time, this.elapsedSec);
   }
 
   get finalScore(): number {
