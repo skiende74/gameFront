@@ -3,6 +3,7 @@ import { EFFECT_ANIM, TEX } from "../config";
 import { Projectile } from "../entities/Projectile";
 import { Enemy } from "../entities/Enemy";
 import type { GameState } from "../state/GameState";
+import type { SfxManager } from "./SfxManager";
 
 const ARROW_SPEED = 560;
 const MAGIC_SPEED = 380;
@@ -15,16 +16,19 @@ export class ProjectileManager {
   private readonly scene: Phaser.Scene;
   private readonly state: GameState;
   private readonly getEnemies: () => Phaser.Physics.Arcade.Group;
+  private readonly sfx: SfxManager;
   private readonly group: Phaser.Physics.Arcade.Group;
 
   constructor(
     scene: Phaser.Scene,
     state: GameState,
     getEnemies: () => Phaser.Physics.Arcade.Group,
+    sfx: SfxManager,
   ) {
     this.scene = scene;
     this.state = state;
     this.getEnemies = getEnemies;
+    this.sfx = sfx;
     this.ensureEffectAnimations();
     this.group = scene.physics.add.group({
       classType: Projectile,
@@ -45,6 +49,7 @@ export class ProjectileManager {
     const angle = Math.atan2(targetY - y, targetX - x);
     const p = this.group.get(x, y, TEX.arrow) as Projectile | null;
     if (!p) return;
+    this.sfx.play("bowAttack");
     p.fire({
       x,
       y,
@@ -72,6 +77,7 @@ export class ProjectileManager {
     const angle = Math.atan2(targetY - y, targetX - x);
     const p = this.group.get(x, y, TEX.wizardAttackEffect) as Projectile | null;
     if (!p) return;
+    this.sfx.play("magicCast");
     p.fire({
       x,
       y,
@@ -106,18 +112,23 @@ export class ProjectileManager {
     if (p.aoe > 0) {
       this.explode(p.x, p.y, p.aoe, p.damage);
     } else {
-      if (e.takeDamage(p.damage)) this.state.addKill(e.def.score);
+      const killed = e.takeDamage(p.damage);
+      this.sfx.play(killed ? "enemyDeath" : "hitFlesh");
+      if (killed) this.state.addKill(e.def.score);
     }
     p.deactivate();
   }
 
   /** 착탄 지점 반경 내 모든 적에게 피해를 주고 폭발 이펙트를 띄운다. */
   private explode(cx: number, cy: number, radius: number, damage: number): void {
+    this.sfx.play("magicExplosion");
     for (const obj of this.getEnemies().getChildren()) {
       const e = obj as Enemy;
       if (!e.targetable) continue;
       if (Phaser.Math.Distance.Between(cx, cy, e.x, e.y) <= radius) {
-        if (e.takeDamage(damage)) this.state.addKill(e.def.score);
+        const killed = e.takeDamage(damage);
+        this.sfx.play(killed ? "enemyDeath" : "hitFlesh");
+        if (killed) this.state.addKill(e.def.score);
       }
     }
     this.spawnExplosion(cx, cy, radius);

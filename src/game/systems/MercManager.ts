@@ -5,6 +5,7 @@ import { Enemy } from "../entities/Enemy";
 import { MERC_COMBAT, type MercCombat } from "../data/mercs";
 import { GAME_EVENT, type GameState } from "../state/GameState";
 import type { ProjectileManager } from "./ProjectileManager";
+import type { SfxManager } from "./SfxManager";
 
 const CLUMP_SPACING_X = 32;
 const CLUMP_SPACING_Y = 20;
@@ -21,6 +22,7 @@ export class MercManager {
   private readonly getPlayer: () => Phaser.Physics.Arcade.Sprite | undefined;
   private readonly getEnemies: () => Phaser.Physics.Arcade.Group;
   private readonly projectiles: ProjectileManager;
+  private readonly sfx: SfxManager;
   private readonly onPlayerAttack?: (targetX: number) => void;
   private readonly mercs: Mercenary[] = [];
   private playerCombat: MercCombat | null = null;
@@ -32,6 +34,7 @@ export class MercManager {
     getPlayer: () => Phaser.Physics.Arcade.Sprite | undefined,
     getEnemies: () => Phaser.Physics.Arcade.Group,
     projectiles: ProjectileManager,
+    sfx: SfxManager,
     onPlayerAttack?: (targetX: number) => void,
   ) {
     this.scene = scene;
@@ -39,6 +42,7 @@ export class MercManager {
     this.getPlayer = getPlayer;
     this.getEnemies = getEnemies;
     this.projectiles = projectiles;
+    this.sfx = sfx;
     this.onPlayerAttack = onPlayerAttack;
     this.ensureEffectAnimations();
 
@@ -128,7 +132,10 @@ export class MercManager {
     const damage = this.damageFor(combat);
     switch (combat.role) {
       case "melee": {
-        if (target.takeDamage(damage)) this.state.addKill(target.def.score);
+        this.sfx.play("swordAttack");
+        const killed = target.takeDamage(damage);
+        this.sfx.play(killed ? "enemyDeath" : "hitFlesh");
+        if (killed) this.state.addKill(target.def.score);
         this.meleeSlash(x, y, target.x, target.y);
         break;
       }
@@ -275,6 +282,7 @@ export class MercManager {
       const player = this.getPlayer();
       if (!player || this.state.over) return;
       this.state.healPlayer(amount);
+      this.sfx.play("heal");
       this.healPulse(player.x, player.y);
     });
   }

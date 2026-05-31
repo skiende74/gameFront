@@ -32,6 +32,7 @@ import { ensureMercAnimations } from "../entities/Mercenary";
 import { WaveManager } from "../systems/WaveManager";
 import { ProjectileManager } from "../systems/ProjectileManager";
 import { MercManager } from "../systems/MercManager";
+import { SfxManager } from "../systems/SfxManager";
 import { getUpgrade, type UpgradeId } from "../data/upgrades";
 
 const GAME_EXIT_EVENT = "game:exit";
@@ -74,6 +75,7 @@ export class DungeonScene extends Phaser.Scene {
   private waves?: WaveManager;
   private projectiles?: ProjectileManager;
   private mercs?: MercManager;
+  private sfx!: SfxManager;
   private boss?: Enemy;
   private facing: Facing = "down";
   private usingClass = false;
@@ -108,15 +110,17 @@ export class DungeonScene extends Phaser.Scene {
     this.drawVignette();
     this.buildHud();
     this.setupInput();
+    this.sfx = new SfxManager(this);
 
     this.waves = new WaveManager(this, this.state, () => this.player);
-    this.projectiles = new ProjectileManager(this, this.state, () => this.waves!.enemies);
+    this.projectiles = new ProjectileManager(this, this.state, () => this.waves!.enemies, this.sfx);
     this.mercs = new MercManager(
       this,
       this.state,
       () => this.player,
       () => this.waves!.enemies,
       this.projectiles,
+      this.sfx,
       (targetX) => this.triggerAttackAnim(targetX),
     );
 
@@ -193,6 +197,7 @@ export class DungeonScene extends Phaser.Scene {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
     if (!payload.victory) this.playPlayerDeath();
+    else this.sfx.play("victory");
     this.physics.world.pause();
     this.pauseMenu?.hide();
 
@@ -216,11 +221,13 @@ export class DungeonScene extends Phaser.Scene {
     this.paused = paused;
 
     if (paused) {
+      this.sfx.play("pause");
       const body = this.player.body as Phaser.Physics.Arcade.Body;
       body.setVelocity(0, 0);
       this.physics.world.pause();
       this.pauseMenu?.show();
     } else {
+      this.sfx.play("unpause");
       this.physics.world.resume();
       this.pauseMenu?.hide();
     }
@@ -237,6 +244,7 @@ export class DungeonScene extends Phaser.Scene {
 
     this.hurtCooldown = HURT_IFRAME_MS;
     this.state.damagePlayer(enemy.damage);
+    this.sfx.play("playerHurt");
     if (!this.state.over) this.flashPlayerHurt();
   }
 
@@ -311,6 +319,7 @@ export class DungeonScene extends Phaser.Scene {
     body.setVelocity(0, 0);
     this.physics.world.pause();
     this.showUpgradeWait(payload);
+    this.sfx.play("uiConfirm");
 
     window.dispatchEvent(new CustomEvent(UPGRADE_REQUEST_EVENT, { detail: payload }));
   }
@@ -326,35 +335,47 @@ export class DungeonScene extends Phaser.Scene {
 
   private applyUpgrade(upgradeId: string): void {
     const upgrade = getUpgrade(upgradeId);
-    if (!upgrade) return;
+    if (!upgrade) {
+      this.sfx.play("uiDenied");
+      return;
+    }
 
     switch (upgrade.id as UpgradeId) {
       case "hire-sword":
         this.state.addMerc("sword");
+        this.sfx.play("upgradeSelect");
         break;
       case "hire-bow":
         this.state.addMerc("bow");
+        this.sfx.play("upgradeSelect");
         break;
       case "hire-mage":
         this.state.addMerc("mage");
+        this.sfx.play("upgradeSelect");
         break;
       case "hire-cleric":
         this.state.addMerc("cleric");
+        this.sfx.play("upgradeSelect");
         break;
       case "tactics":
         this.state.boostMercenaryDamage(0.1);
+        this.sfx.play("atkBuff");
         break;
       case "haste":
         this.state.boostMercenaryAttackSpeed(0.1);
+        this.sfx.play("speedBuff");
         break;
       case "agility":
         this.state.boostPlayerSpeed(0.1);
+        this.sfx.play("speedBuff");
         break;
       case "first-aid":
         this.state.healPlayer(30);
+        this.sfx.play("heal");
         break;
       case "defense":
         this.state.increaseMaxHp(20);
+        this.sfx.play("maxHpBuff");
         break;
     }
   }
@@ -362,6 +383,7 @@ export class DungeonScene extends Phaser.Scene {
   /** 보스 라운드 시작: 보스 스폰 + 배너 + 체력바. */
   private onBossStart(payload: BossStartPayload): void {
     if (this.gameOver) return;
+    this.sfx.play("encounter");
     const boss = this.waves?.spawnBoss(payload.bossId);
     if (boss) {
       boss.onDeath = () => this.state.defeatBoss();

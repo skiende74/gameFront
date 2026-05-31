@@ -26,6 +26,7 @@ import {
   enemyTex,
 } from "../data/enemies";
 import { MERC_ATTACK_SOURCES, MERC_WALK_SOURCES } from "../data/mercs";
+import { SFX_ASSETS, sfxKey, type SfxId } from "../data/sfx";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -93,6 +94,9 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(TEX.arrow, PACK_PATH.arrow);
     this.load.spritesheet(TEX.wizardAttackEffect, PACK_PATH.wizardAttackEffect, classFrame);
     this.load.spritesheet(TEX.priestHealEffect, PACK_PATH.priestHealEffect, classFrame);
+    for (const id of Object.keys(SFX_ASSETS) as SfxId[]) {
+      this.load.audio(sfxKey(id), SFX_ASSETS[id]);
+    }
 
     this.load.on("loaderror", (file: Phaser.Loader.File) => {
       console.warn(`[asset] missing, using fallback if any: ${file.key}`);
