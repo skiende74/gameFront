@@ -104,7 +104,9 @@ mage: { atk: 14, range: 300, cooldownMs: 1800, aoeRadius: 75, ... }
 
 ---
 
-## 용병 조합 (롤토체스식 시너지)
+## 폐기된 초안: 롤토체스식 시너지
+
+> 아래 초안은 "같이 있으면 강해지는 시너지" 방식이라 현재 의도와 다르다. 실제 구현은 하단의 **동일 직업 합체/승급 구현계획**을 따른다.
 
 같은 직업 N명을 모으면 시너지가 발동하는 구조. 군대 규모가 작고(플레이어 포함 최대 6명) 직업이 4종이라 잘 어울린다.
 
@@ -153,3 +155,352 @@ mage: { atk: 14, range: 300, cooldownMs: 1800, aoeRadius: 75, ... }
 4. 여유 되면 혼합 시너지(균형/포격대).
 
 이렇게 하면 "용병 5명 아무거나 풀기"가 아니라 **"내가 무슨 조합을 갈지"** 고민이 생겨서, `todo.md`의 "전략 생각할 요소"가 채워진다.
+
+---
+
+## 동일 직업 합체/승급 구현계획
+
+별도 문서로 분리: [docs/mercenary-combination-plan.md](docs/mercenary-combination-plan.md)
+
+---
+
+## 폐기된 초안: 단일 직업 2/3 시너지 구현계획
+
+> **목표:** 플레이어 본체를 포함한 `GameState.party`에서 같은 직업이 2명 또는 3명 이상 모이면 해당 직업 전투 스펙에 시너지 보너스를 적용한다.  
+> **범위:** 1차 구현은 단일 직업 시너지(`검사`, `궁수`, `마법사`, `성직자`)만 포함한다. 혼합 시너지, 카드 확률 보정, 신규 패시브 카드는 제외한다.  
+> **원칙:** 3명 이상은 3단계 효과만 적용한다. 4명, 5명, 6명이어도 추가 중첩은 없다.
+
+### 1차 시너지 수치
+
+`3명` 효과는 `2명` 효과에 더하는 값이 아니라 **최종 적용값**으로 둔다. 그래야 밸런스 계산이 단순하다.
+
+| 직업 id | 2명 | 3명 이상 | 구현 방식 |
+|---|---:|---:|---|
+| `sword` | 근접 스플래시 반경 +15px | 근접 스플래시 반경 +35px, 공격력 +10% | `aoeRadius`, `atk` 보정 |
+| `bow` | 공격속도 +15% | 공격속도 +30%, 사거리 +40px | `cooldownMs`, `range` 보정 |
+| `mage` | 폭발 반경 +20px | 폭발 반경 +40px, 공격력 +10% | `aoeRadius`, `atk` 보정 |
+| `cleric` | 회복량 +3 | 회복량 +8, 회복 주기 15% 단축 | `heal`, `cooldownMs` 보정 |
+
+### 파일 구조
+
+- Create: `src/game/data/synergies.ts`  
+  시너지 정의, 파티 카운트 계산, 현재 티어 계산, 전투 스펙 보정 함수를 담당한다.
+- Modify: `src/game/systems/MercManager.ts`  
+  플레이어와 고용 용병이 공격/회복할 때 기본 `MERC_COMBAT` 대신 시너지 적용 후 스펙을 사용하게 한다.
+- Modify: `src/game/hud/GameHud.ts`  
+  이미 직업별 `x2`, `x3` 배지를 표시하고 있으므로, 2명 이상일 때 배지 색만 강조한다.
+- Test: `tests/synergies.test.ts`  
+  순수 함수 기준으로 파티 카운트, 티어 판정, 전투 스펙 보정이 맞는지 검증한다.
+
+### Task 1: 시너지 계산 모듈 추가
+
+**Files:**
+- Create: `src/game/data/synergies.ts`
+- Test: `tests/synergies.test.ts`
+
+- [ ] **Step 1: 실패 테스트 작성**
+
+```ts
+import assert from "node:assert/strict";
+import { applySynergyToCombat, countPartyByClass, getSynergyTier } from "../src/game/data/synergies.ts";
+import { MERC_COMBAT } from "../src/game/data/mercs.ts";
+
+assert.deepEqual(countPartyByClass(["sword", "sword", "mage"]), {
+  sword: 2,
+  mage: 1,
+});
+
+assert.equal(getSynergyTier(1), 0);
+assert.equal(getSynergyTier(2), 2);
+assert.equal(getSynergyTier(3), 3);
+assert.equal(getSynergyTier(6), 3);
+
+const sword2 = applySynergyToCombat(MERC_COMBAT.sword, ["sword", "sword"]);
+assert.equal(sword2.aoeRadius, (MERC_COMBAT.sword.aoeRadius ?? 0) + 15);
+
+const sword3 = applySynergyToCombat(MERC_COMBAT.sword, ["sword", "sword", "sword"]);
+assert.equal(sword3.aoeRadius, (MERC_COMBAT.sword.aoeRadius ?? 0) + 35);
+assert.equal(sword3.atk, Math.round(MERC_COMBAT.sword.atk * 1.1));
+
+const bow3 = applySynergyToCombat(MERC_COMBAT.bow, ["bow", "bow", "bow"]);
+assert.equal(bow3.range, MERC_COMBAT.bow.range + 40);
+assert.equal(bow3.cooldownMs, Math.round(MERC_COMBAT.bow.cooldownMs / 1.3));
+```
+
+- [ ] **Step 2: 실패 확인**
+
+Run:
+
+```bash
+node --experimental-strip-types tests/synergies.test.ts
+```
+
+Expected: `Cannot find module .../src/game/data/synergies.ts`
+
+- [ ] **Step 3: 최소 구현 작성**
+
+```ts
+import type { MercCombat } from "./mercs";
+
+export type SynergyTier = 0 | 2 | 3;
+
+type SynergyBonus = {
+  atkRatio?: number;
+  attackSpeedRatio?: number;
+  rangeBonus?: number;
+  aoeRadiusBonus?: number;
+  healBonus?: number;
+};
+
+type SynergyDef = {
+  label: string;
+  tiers: Record<2 | 3, SynergyBonus>;
+};
+
+export const SYNERGY_DEFS: Record<string, SynergyDef> = {
+  sword: {
+    label: "검사",
+    tiers: {
+      2: { aoeRadiusBonus: 15 },
+      3: { aoeRadiusBonus: 35, atkRatio: 0.1 },
+    },
+  },
+  bow: {
+    label: "궁수",
+    tiers: {
+      2: { attackSpeedRatio: 0.15 },
+      3: { attackSpeedRatio: 0.3, rangeBonus: 40 },
+    },
+  },
+  mage: {
+    label: "마법사",
+    tiers: {
+      2: { aoeRadiusBonus: 20 },
+      3: { aoeRadiusBonus: 40, atkRatio: 0.1 },
+    },
+  },
+  cleric: {
+    label: "성직자",
+    tiers: {
+      2: { healBonus: 3 },
+      3: { healBonus: 8, attackSpeedRatio: 0.15 },
+    },
+  },
+};
+
+export function countPartyByClass(party: string[]): Record<string, number> {
+  return party.reduce<Record<string, number>>((counts, id) => {
+    if (!SYNERGY_DEFS[id]) return counts;
+    counts[id] = (counts[id] ?? 0) + 1;
+    return counts;
+  }, {});
+}
+
+export function getSynergyTier(count: number): SynergyTier {
+  if (count >= 3) return 3;
+  if (count >= 2) return 2;
+  return 0;
+}
+
+export function applySynergyToCombat(base: MercCombat, party: string[]): MercCombat {
+  const tier = getSynergyTier(countPartyByClass(party)[base.id] ?? 0);
+  if (tier === 0) return { ...base };
+
+  const bonus = SYNERGY_DEFS[base.id]?.tiers[tier];
+  if (!bonus) return { ...base };
+
+  return {
+    ...base,
+    atk: Math.max(1, Math.round(base.atk * (1 + (bonus.atkRatio ?? 0)))),
+    range: base.range + (bonus.rangeBonus ?? 0),
+    cooldownMs: Math.max(1, Math.round(base.cooldownMs / (1 + (bonus.attackSpeedRatio ?? 0)))),
+    aoeRadius:
+      base.aoeRadius === undefined && !bonus.aoeRadiusBonus
+        ? base.aoeRadius
+        : (base.aoeRadius ?? 0) + (bonus.aoeRadiusBonus ?? 0),
+    heal: base.heal === undefined ? base.heal : base.heal + (bonus.healBonus ?? 0),
+  };
+}
+```
+
+- [ ] **Step 4: 테스트 통과 확인**
+
+Run:
+
+```bash
+node --experimental-strip-types tests/synergies.test.ts
+```
+
+Expected: 종료 코드 `0`
+
+### Task 2: 전투 로직에 시너지 적용
+
+**Files:**
+- Modify: `src/game/systems/MercManager.ts`
+
+- [ ] **Step 1: 적용 지점 확인**
+
+현재 구조:
+
+- 플레이어 본체 스펙: `syncParty()`에서 `MERC_COMBAT[party[0]]`를 `playerCombat`에 저장
+- 고용 용병 스펙: `Mercenary.combat`이 생성 시점의 `MERC_COMBAT[id]`를 저장
+- 실제 피해/쿨다운 계산: `damageFor(combat)`, `cooldownFor(combat)`에서 처리
+
+따라서 기존 `Mercenary.combat`을 직접 바꾸지 말고, `MercManager`가 공격 직전에 `applySynergyToCombat(base, state.party)`를 호출한다.
+
+- [ ] **Step 2: import 추가**
+
+```ts
+import { applySynergyToCombat } from "../data/synergies";
+```
+
+- [ ] **Step 3: 헬퍼 추가**
+
+```ts
+private combatFor(id: string): MercCombat | null {
+  const base = MERC_COMBAT[id];
+  return base ? applySynergyToCombat(base, this.state.party) : null;
+}
+```
+
+- [ ] **Step 4: 플레이어 스펙 갱신 변경**
+
+```ts
+private syncParty(party: string[]): void {
+  this.playerCombat = party.length > 0 ? this.combatFor(party[0]) : null;
+
+  const wanted = Math.max(0, party.length - 1);
+  while (this.mercs.length < wanted) {
+    const id = party[this.mercs.length + 1];
+    const merc = new Mercenary(this.scene, id);
+    const player = this.getPlayer();
+    if (player) merc.setPosition(player.x, player.y);
+    this.mercs.push(merc);
+  }
+}
+```
+
+- [ ] **Step 5: 고용 용병 공격 시점에 적용**
+
+```ts
+private runCombat(merc: Mercenary): void {
+  const combat = this.combatFor(merc.mercId);
+  if (!combat) return;
+
+  if (combat.role === "heal") {
+    if (merc.ready) {
+      merc.resetCooldown(this.cooldownFor(combat));
+      merc.playAttackCue();
+      this.scheduleHeal(combat.heal ?? 0);
+    }
+    return;
+  }
+
+  const center = this.bodyCenter(merc);
+  const target = this.nearestEnemy(center.x, center.y, combat.range);
+  if (!target) return;
+
+  merc.faceTo(target.x);
+  if (!merc.ready) return;
+  merc.resetCooldown(this.cooldownFor(combat));
+  merc.playAttackCue();
+  this.performAttack(combat, merc.x, merc.y, target);
+}
+```
+
+- [ ] **Step 6: 빌드 확인**
+
+Run:
+
+```bash
+npm run build
+```
+
+Expected: TypeScript 오류 없이 Vite build 완료
+
+### Task 3: HUD에 최소 피드백 추가
+
+**Files:**
+- Modify: `src/game/hud/GameHud.ts`
+
+- [ ] **Step 1: 현재 배지 재사용**
+
+이미 `syncParty()`에서 직업별 개수를 세고 `x2`, `x3` 배지를 표시한다. 1차 구현은 새 UI를 만들지 않고 배지 색으로만 시너지 활성화를 보여준다.
+
+- [ ] **Step 2: 배지 색상 규칙 적용**
+
+`slot.badgeText.setText(...)` 아래에 다음 규칙을 추가한다.
+
+```ts
+if (count >= 3) {
+  slot.badge.setFillStyle(0xffd54a, 1);
+  slot.badgeText.setColor("#1b1024");
+} else if (count >= 2) {
+  slot.badge.setFillStyle(0x6effe0, 1);
+  slot.badgeText.setColor("#1b1024");
+} else {
+  slot.badge.setFillStyle(0xc41e1e, 1);
+  slot.badgeText.setColor("#fff4d6");
+}
+```
+
+- [ ] **Step 3: 표시 확인**
+
+Run:
+
+```bash
+npm run build
+```
+
+Expected: build 통과. 게임에서 같은 직업 2명 이상일 때 하단 용병 슬롯 배지 색이 바뀐다.
+
+### Task 4: 최종 검증
+
+**Files:**
+- Verify only
+
+- [ ] **Step 1: 순수 함수 테스트**
+
+Run:
+
+```bash
+node --experimental-strip-types tests/synergies.test.ts
+```
+
+Expected: 종료 코드 `0`
+
+- [ ] **Step 2: 린트**
+
+Run:
+
+```bash
+npm run lint
+```
+
+Expected: ESLint 오류 없음
+
+- [ ] **Step 3: 빌드**
+
+Run:
+
+```bash
+npm run build
+```
+
+Expected: TypeScript 오류 없음. Vite bundle 경고는 기존 대용량 번들 경고라 실패로 보지 않는다.
+
+- [ ] **Step 4: 수동 플레이 체크**
+
+1. 전사 시작 후 전사 1명 고용 → 전사 `2명` 시너지로 스플래시 반경 증가 체감 확인.
+2. 전사 2명을 추가 고용해 전사 `3명` 이상 → 스플래시 반경과 공격력 증가 확인.
+3. 궁수 3명 → 공격 주기가 짧아지고 사거리 증가 확인.
+4. 마법사 3명 → 폭발 반경 증가 확인.
+5. 성직자 3명 → 회복량 증가와 회복 주기 단축 확인.
+
+### 구현 시 주의점
+
+- `party[0]`인 플레이어 직업도 반드시 카운트에 포함한다.
+- 3명 이상은 3티어만 적용한다. 4명 이상 추가 중첩 금지.
+- `MERC_COMBAT` 원본 객체를 직접 수정하지 않는다. 매 공격 시점에 보정된 복사본을 만들어 사용한다.
+- `tactics`, `haste` 같은 기존 전역 강화는 유지한다. 시너지 보정 후 `damageFor()`와 `cooldownFor()`에서 기존 전역 배율이 한 번 더 적용되게 둔다.
+- 혼합 시너지, 카드 확률 보정, 카드 설명 UI는 이번 범위에서 제외한다.

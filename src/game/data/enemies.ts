@@ -42,7 +42,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     score: 10,
     scale: 3.3,
     feetRatio: 0.62,
-    body: { w: 30, h: 26 },
+    body: { w: 24, h: 20 },
   },
   rusher: {
     id: "rusher",
