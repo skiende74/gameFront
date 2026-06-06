@@ -28,7 +28,7 @@ export class GameHud {
       wave: new Phaser.Geom.Rectangle(GAME_WIDTH - HUD.margin - panelW, HUD.margin, panelW, HUD.panelHeight),
       mercBar: new Phaser.Geom.Rectangle(mercX - 8, mercTop, totalW + 16, box + 24),
       // React SynergyPanel(left-4 top-[154px] w-[252px]) 위치에 맞춘 근사 영역.
-      synergy: new Phaser.Geom.Rectangle(16, 154, 252, 280),
+      synergy: new Phaser.Geom.Rectangle(16, 154, 252, 360),
     };
   }
 

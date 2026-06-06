@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BossHud, TopHud } from "./TopHud.tsx";
 import { MercBar } from "./MercBar.tsx";
 import { SynergyPanel } from "./SynergyPanel.tsx";
+import { GameStage } from "./GameStage.tsx";
 import { PauseOverlay, ResultOverlay } from "./GameModals.tsx";
 import {
   GAME_HUD_EVENT,
@@ -33,16 +34,22 @@ export function GameOverlay() {
   if (!snapshot) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden font-pixel-ko text-bone-white">
-      <TopHud snapshot={snapshot} />
-      <BossHud boss={snapshot.boss} />
-      <SynergyPanel rows={snapshot.synergies} />
-      <MercBar party={snapshot.party} />
-      <div className="absolute bottom-4 left-4 text-[12px] leading-relaxed text-bone-white/70">
-        WASD / 방향키 이동 · ESC 일시정지
-      </div>
-      {paused && !result && <PauseOverlay />}
-      {result && <ResultOverlay result={result} />}
-    </div>
+    <>
+      <GameStage>
+        <TopHud snapshot={snapshot} />
+        <BossHud boss={snapshot.boss} />
+        <SynergyPanel rows={snapshot.synergies} />
+        <MercBar party={snapshot.party} />
+        <div className="absolute bottom-4 left-4 text-[12px] leading-relaxed text-bone-white/70">
+          WASD / 방향키 이동 · ESC 일시정지
+        </div>
+      </GameStage>
+      {(paused || result) && (
+        <div className="pointer-events-none fixed inset-0 z-50 font-pixel-ko text-bone-white">
+          {paused && !result && <PauseOverlay />}
+          {result && <ResultOverlay result={result} />}
+        </div>
+      )}
+    </>
   );
 }
