@@ -21,17 +21,49 @@ export type WavePhase = {
 };
 
 export const WAVE_PHASES: WavePhase[] = [
+  // 1~5 오크 테마: 기본 오크 + 3라운드부터 엘리트, 4라운드부터 아머 오크가 섞인다.
   {
     minWave: 1,
-    maxWave: 4,
-    types: ["slime"],
+    maxWave: 5,
+    types: ["orc"],
     minAlive: 6,
     maxAlive: 14,
-    mixIns: [{ type: "rusher", fromWave: 3, weight: 0.4 }],
+    mixIns: [
+      { type: "orc-elite", fromWave: 3, weight: 0.5 },
+      { type: "orc-armored", fromWave: 4, weight: 0.35 },
+    ],
   },
-  { minWave: 5, maxWave: 10, types: ["slime", "rusher"], minAlive: 14, maxAlive: 28 },
-  { minWave: 11, maxWave: 16, types: ["slime", "rusher", "brute"], minAlive: 28, maxAlive: 45 },
-  { minWave: 17, maxWave: 20, types: ["slime", "rusher", "brute"], minAlive: 45, maxAlive: 65 },
+  // 6~10 늑대 테마: 빠른 웨어울프 주력 + 후반에 웨어베어가 섞인다.
+  {
+    minWave: 6,
+    maxWave: 10,
+    types: ["werewolf"],
+    minAlive: 14,
+    maxAlive: 28,
+    mixIns: [{ type: "werebear", fromWave: 8, weight: 0.45 }],
+  },
+  // 11~15 곰 테마: 단단한 웨어베어 주력 + 후반에 웨어울프가 섞인다.
+  {
+    minWave: 11,
+    maxWave: 15,
+    types: ["werebear"],
+    minAlive: 28,
+    maxAlive: 45,
+    mixIns: [{ type: "werewolf", fromWave: 13, weight: 0.5 }],
+  },
+  // 16~20 병사 테마: 병사 → 기사/창병/도끼병이 점점 합류한다.
+  {
+    minWave: 16,
+    maxWave: 20,
+    types: ["soldier"],
+    minAlive: 45,
+    maxAlive: 65,
+    mixIns: [
+      { type: "knight", fromWave: 17, weight: 0.5 },
+      { type: "lancer", fromWave: 18, weight: 0.45 },
+      { type: "axeman", fromWave: 19, weight: 0.35 },
+    ],
+  },
 ];
 
 export function phaseForWave(wave: number): WavePhase {

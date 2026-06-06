@@ -1,9 +1,19 @@
 import { CLASS_ASSET_BASE } from "../config";
 
 export type EnemyId =
-  | "slime"
-  | "rusher"
-  | "brute"
+  // 1~5 오크 테마
+  | "orc"
+  | "orc-elite"
+  | "orc-armored"
+  // 6~10 늑대 테마 / 11~15 곰 테마(werebear 주력)
+  | "werewolf"
+  | "werebear"
+  // 16~20 병사 테마
+  | "soldier"
+  | "knight"
+  | "lancer"
+  | "axeman"
+  // 보스
   | "boss-orcrider"
   | "boss-werewolf"
   | "boss-werebear"
@@ -28,47 +38,28 @@ export type EnemyDef = {
   body: { w: number; h: number };
   /** 보스 여부(체력바·라운드 규칙 처리에 사용) */
   boss?: boolean;
+  /** 시트 파일명이 표준(Idle/Walk/Hurt/Death)과 다른 경우의 종류별 오버라이드. */
+  sheetFiles?: Partial<Record<EnemyAnimKind, string>>;
 };
 
-/** 기획서 8-1 수치 기반. slime=Orc / rusher=Werewolf / brute=Werebear 로 매핑. */
+/** 테마별 잡몹 + 보스. 폴더는 Tiny RPG 팩 캐릭터명과 일치. feetRatio는 공통 0.62. */
 export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
-  slime: {
-    id: "slime",
-    label: "슬라임",
-    folder: "Orc",
-    hp: 18,
-    speed: 70,
-    damage: 8,
-    score: 10,
-    scale: 3.3,
-    feetRatio: 0.62,
-    body: { w: 24, h: 20 },
-  },
-  rusher: {
-    id: "rusher",
-    label: "돌진병",
-    folder: "Werewolf",
-    hp: 12,
-    speed: 120,
-    damage: 6,
-    score: 15,
-    scale: 3.4,
-    feetRatio: 0.62,
-    body: { w: 30, h: 28 },
-  },
-  brute: {
-    id: "brute",
-    label: "덩치",
-    folder: "Werebear",
-    hp: 55,
-    speed: 45,
-    damage: 15,
-    score: 30,
-    scale: 4.2,
-    feetRatio: 0.62,
-    body: { w: 40, h: 34 },
-  },
-  // 웨이브 1~4의 오크(슬라임) 계열을 잇는 오크 두목.
+  // 1~5 오크 테마: 오크 → 엘리트 오크 → 아머 오크 순으로 단단해진다.
+  orc: { id: "orc", label: "오크", folder: "Orc", hp: 18, speed: 70, damage: 8, score: 10, scale: 3.3, feetRatio: 0.62, body: { w: 24, h: 20 } },
+  "orc-elite": { id: "orc-elite", label: "엘리트 오크", folder: "Elite Orc", hp: 26, speed: 88, damage: 10, score: 16, scale: 3.5, feetRatio: 0.62, body: { w: 28, h: 24 } },
+  "orc-armored": { id: "orc-armored", label: "아머 오크", folder: "Armored Orc", hp: 46, speed: 56, damage: 12, score: 22, scale: 3.7, feetRatio: 0.62, body: { w: 34, h: 28 } },
+
+  // 6~10 늑대 테마(werewolf 주력) / 11~15 곰 테마(werebear 주력)
+  werewolf: { id: "werewolf", label: "웨어울프", folder: "Werewolf", hp: 24, speed: 122, damage: 9, score: 18, scale: 3.6, feetRatio: 0.62, body: { w: 30, h: 28 } },
+  werebear: { id: "werebear", label: "웨어베어", folder: "Werebear", hp: 62, speed: 50, damage: 16, score: 32, scale: 4.4, feetRatio: 0.62, body: { w: 42, h: 36 } },
+
+  // 16~20 병사 테마: 용병으로 쓰지 않는 인간형 적.
+  soldier: { id: "soldier", label: "병사", folder: "Soldier", hp: 52, speed: 82, damage: 14, score: 30, scale: 3.6, feetRatio: 0.62, body: { w: 26, h: 30 } },
+  knight: { id: "knight", label: "기사", folder: "Knight", hp: 84, speed: 66, damage: 18, score: 46, scale: 3.8, feetRatio: 0.62, body: { w: 28, h: 32 } },
+  lancer: { id: "lancer", label: "창병", folder: "Lancer", hp: 64, speed: 96, damage: 16, score: 40, scale: 3.8, feetRatio: 0.62, body: { w: 28, h: 30 }, sheetFiles: { walk: "Walk01" } },
+  axeman: { id: "axeman", label: "도끼병", folder: "Armored Axeman", hp: 115, speed: 50, damage: 22, score: 60, scale: 4.0, feetRatio: 0.62, body: { w: 32, h: 34 } },
+
+  // 웨이브 1~4의 오크 계열을 잇는 오크 두목.
   "boss-orcrider": {
     id: "boss-orcrider",
     label: "오크 라이더 두목",
@@ -156,6 +147,7 @@ const ANIM_FILE: Record<EnemyAnimKind, string> = {
   death: "Death",
 };
 
-export function enemySheetPath(folder: string, kind: EnemyAnimKind): string {
-  return encodeURI(`${CLASS_ASSET_BASE}/${folder}/${folder}/${folder}-${ANIM_FILE[kind]}.png`);
+export function enemySheetPath(folder: string, kind: EnemyAnimKind, fileOverride?: string): string {
+  const file = fileOverride ?? ANIM_FILE[kind];
+  return encodeURI(`${CLASS_ASSET_BASE}/${folder}/${folder}/${folder}-${file}.png`);
 }

@@ -71,14 +71,17 @@ export class PreloadScene extends Phaser.Scene {
       this.load.spritesheet(merc.tex, classSheetPath(merc.folder, "Idle"), classFrame);
     }
 
-    // 적 3종 스프라이트시트 (idle / walk / hurt / death)
+    // 적 스프라이트시트 (idle / walk / hurt / death). 시트 파일명이 다른 적은 sheetFiles로 보정.
     const enemyFrame = { frameWidth: ENEMY_FRAME.width, frameHeight: ENEMY_FRAME.height };
     for (const id of ENEMY_IDS) {
-      const folder = ENEMY_DEFS[id].folder;
-      this.load.spritesheet(enemyTex(id, "idle"), enemySheetPath(folder, "idle"), enemyFrame);
-      this.load.spritesheet(enemyTex(id, "walk"), enemySheetPath(folder, "walk"), enemyFrame);
-      this.load.spritesheet(enemyTex(id, "hurt"), enemySheetPath(folder, "hurt"), enemyFrame);
-      this.load.spritesheet(enemyTex(id, "death"), enemySheetPath(folder, "death"), enemyFrame);
+      const { folder, sheetFiles } = ENEMY_DEFS[id];
+      for (const kind of ["idle", "walk", "hurt", "death"] as const) {
+        this.load.spritesheet(
+          enemyTex(id, kind),
+          enemySheetPath(folder, kind, sheetFiles?.[kind]),
+          enemyFrame,
+        );
+      }
     }
 
     // 용병 전투용 walk 시트 (idle 은 HUD 아이콘 시트를 재사용)
