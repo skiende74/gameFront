@@ -242,6 +242,21 @@ canvas {
   transform-origin: center;
 }
 
+/* ─── Upgrade card (rarity tier coloring) ───────────────────────────────── */
+
+.upgrade-card {
+  border-color: color-mix(in srgb, var(--tier-color) 45%, transparent);
+  transition: all 0.15s ease-out;
+}
+
+.upgrade-card:hover,
+.upgrade-card:focus-visible {
+  outline: none;
+  border-color: var(--tier-color);
+  box-shadow: 0 0 26px var(--tier-glow);
+  transform: translateY(-4px);
+}
+
 /* ─── Title glow ────────────────────────────────────────────────────────── */
 
 @keyframes title-pulse {

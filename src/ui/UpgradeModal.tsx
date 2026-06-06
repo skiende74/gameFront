@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   rollUpgradeChoices,
+  UPGRADE_TIERS,
   type UpgradeDef,
 } from "../game/data/upgrades";
 
@@ -58,7 +59,7 @@ export function UpgradeModal() {
       aria-modal="true"
       aria-label="업그레이드 선택"
     >
-      <div className="w-full max-w-4xl border-4 border-torch-core/70 bg-dungeon-deepest/95 p-5 shadow-[0_0_40px_rgba(255,122,58,0.35)]">
+      <div className="w-full max-w-4xl rounded-[6px] border-2 border-torch-core/70 bg-dungeon-deepest/95 p-5 shadow-[inset_1px_1px_0_rgba(236,226,200,0.12),0_0_0_2px_rgba(0,0,0,0.65),0_0_42px_rgba(255,122,58,0.3),0_18px_52px_rgba(0,0,0,0.78)]">
         <div className="mb-5 text-center">
           <div className="font-pixel-en text-[10px] tracking-[0.24em] text-torch-flame/70">
             WAVE CLEAR
@@ -72,24 +73,48 @@ export function UpgradeModal() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-5">
-          {choices.map((upgrade) => (
-            <button
-              key={upgrade.id}
-              type="button"
-              className="group flex min-h-40 flex-col border-2 border-bone-white/25 bg-dungeon-stone/90 p-3 text-left transition hover:-translate-y-1 hover:border-torch-core hover:shadow-[0_0_24px_rgba(255,122,58,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-torch-core"
-              onClick={() => selectUpgrade(upgrade)}
-            >
-              <div className="text-lg text-bone-white group-hover:text-torch-core">
-                {upgrade.title}
-              </div>
-              <div className="mt-3 flex-1 text-sm leading-relaxed text-ash-grey">
-                {upgrade.desc}
-              </div>
-              <div className="mt-4 border-t border-bone-white/15 pt-3 font-pixel-en text-[10px] leading-relaxed text-torch-core">
-                {upgrade.effect}
-              </div>
-            </button>
-          ))}
+          {choices.map((upgrade) => {
+            const tier = UPGRADE_TIERS[upgrade.tier];
+            return (
+              <button
+                key={upgrade.id}
+                type="button"
+                className="upgrade-card group flex min-h-40 flex-col rounded-[6px] border-2 bg-dungeon-stone/90 p-3 text-left"
+                style={
+                  {
+                    "--tier-color": tier.color,
+                    "--tier-glow": tier.glow,
+                  } as CSSProperties
+                }
+                onClick={() => selectUpgrade(upgrade)}
+              >
+                <div className="mb-2 flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 rotate-45 border border-black/50"
+                    style={{ backgroundColor: tier.color }}
+                  />
+                  <span
+                    className="font-pixel-en text-[8px] uppercase tracking-[0.18em]"
+                    style={{ color: tier.color }}
+                  >
+                    {tier.label}
+                  </span>
+                </div>
+                <div className="text-lg text-bone-white transition-colors group-hover:text-(--tier-color)">
+                  {upgrade.title}
+                </div>
+                <div className="mt-2 flex-1 text-sm leading-relaxed text-ash-grey">
+                  {upgrade.desc}
+                </div>
+                <div
+                  className="mt-4 border-t pt-3 font-pixel-en text-[10px] leading-relaxed"
+                  style={{ borderColor: `${tier.color}33`, color: tier.color }}
+                >
+                  {upgrade.effect}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-5 flex items-center justify-between border-t border-bone-white/15 pt-4">
