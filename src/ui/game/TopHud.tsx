@@ -30,7 +30,7 @@ export function TopHud({ snapshot }: Props) {
         </div>
         <div className="mt-2 h-3.5 rounded-[4px] border border-black/60 bg-dungeon-mid shadow-[inset_0_2px_5px_rgba(0,0,0,0.55)]">
           <div
-            className={`h-full rounded-[3px] ${hpColor} shadow-[0_0_10px_rgba(255,213,138,0.22)]`}
+            className={`h-full rounded-[3px] ${hpColor} shadow-[0_0_10px_rgba(255,213,138,0.22)] transition-[width] duration-300 ease-out`}
             style={{ width: `${snapshot.hp.ratio * 100}%` }}
           />
         </div>
@@ -54,7 +54,7 @@ export function TopHud({ snapshot }: Props) {
         </div>
         <div className="mt-2 h-1.5 rounded-[3px] bg-dungeon-mid shadow-[inset_0_1px_4px_rgba(0,0,0,0.65)]">
           <div
-            className="h-full rounded-[3px] bg-rune-cyan shadow-[0_0_10px_rgba(110,255,224,0.55)]"
+            className="h-full rounded-[3px] bg-rune-cyan shadow-[0_0_10px_rgba(110,255,224,0.55)] transition-[width] duration-300 ease-out"
             style={{ width: `${snapshot.wave.progress * 100}%` }}
           />
         </div>
@@ -70,7 +70,7 @@ export function BossHud({ boss }: { boss: GameHudSnapshot["boss"] }) {
     <section className="absolute left-1/2 top-[100px] w-[560px] -translate-x-1/2 rounded-[6px] border-2 border-blood-red/80 bg-dungeon-deepest/90 px-3 py-2 text-center shadow-[inset_1px_1px_0_rgba(236,226,200,0.08),0_0_0_2px_rgba(0,0,0,0.58),0_0_24px_rgba(196,30,30,0.35)]">
       <div className="mb-1 text-sm text-[#ff7a6b]">{boss.name}</div>
       <div className="h-4 rounded-[4px] bg-dungeon-mid shadow-[inset_0_2px_5px_rgba(0,0,0,0.65)]">
-        <div className="h-full rounded-[3px] bg-blood-red shadow-[0_0_14px_rgba(196,30,30,0.65)]" style={{ width: `${boss.ratio * 100}%` }} />
+        <div className="h-full rounded-[3px] bg-blood-red shadow-[0_0_14px_rgba(196,30,30,0.65)] transition-[width] duration-300 ease-out" style={{ width: `${boss.ratio * 100}%` }} />
       </div>
     </section>
   );
