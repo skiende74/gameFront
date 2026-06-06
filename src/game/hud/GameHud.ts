@@ -4,7 +4,7 @@ import { MERC_COMBAT } from "../data/mercs";
 import { RANK_BADGE, applyRankToCombat } from "../data/unitRanks";
 import { GAME_EVENT, type GameState } from "../state/GameState";
 import type { PartyUnit } from "../state/partyUnits";
-import { activeSynergies, presentClasses, type ComboSynergy } from "../data/synergies";
+import { COMBO_SYNERGIES, presentClasses, type ComboSynergy } from "../data/synergies";
 
 const FONT = "Galmuri11, monospace";
 
@@ -483,17 +483,25 @@ export class GameHud {
     this.layer.add(this.synergyPanel);
   }
 
-  /** 좌측 조합(시너지) 패널을 발동 중인 조합으로 다시 그린다. 행에 마우스를 올리면 효과 툴팁이 뜬다. */
+  /**
+   * 좌측 조합(시너지) 패널을 다시 그린다. 롤토체스처럼 보유 직업이 하나라도 들어간 시너지는
+   * 미발동이어도 회색으로 미리 보여주고, 발동한 것은 강조한다. 행 호버 시 효과 툴팁이 뜬다.
+   */
   private refreshSynergy(present: Set<string>): void {
     if (!this.synergyPanel) return;
     this.synergyPanel.removeAll(true);
     this.hideTooltip();
 
-    const active = activeSynergies(present);
-    if (active.length === 0) return;
+    const rows = COMBO_SYNERGIES.map((combo) => {
+      const have = combo.classes.filter((id) => present.has(id)).length;
+      return { combo, have, active: have === combo.classes.length };
+    })
+      .filter((row) => row.have > 0)
+      .sort((a, b) => Number(b.active) - Number(a.active) || b.have - a.have);
+    if (rows.length === 0) return;
 
     const { x, y, w, rowH, headerH } = this.synergyGeom;
-    const panelH = headerH + active.length * rowH + 8;
+    const panelH = headerH + rows.length * rowH + 8;
 
     const bg = this.scene.add.graphics().setScrollFactor(0);
     bg.fillStyle(COLOR.panelFill, 0.82);
@@ -508,15 +516,22 @@ export class GameHud {
         .setScrollFactor(0),
     );
 
-    active.forEach((combo, i) => this.drawSynergyRow(combo, y + headerH + i * rowH));
+    rows.forEach((row, i) =>
+      this.drawSynergyRow(row.combo, present, row.active, y + headerH + i * rowH),
+    );
   }
 
-  private drawSynergyRow(combo: ComboSynergy, rowY: number): void {
+  private drawSynergyRow(
+    combo: ComboSynergy,
+    present: Set<string>,
+    active: boolean,
+    rowY: number,
+  ): void {
     const { x, w, rowH } = this.synergyGeom;
 
     combo.classes.forEach((id, j) => {
       const dot = this.scene.add.graphics().setScrollFactor(0);
-      dot.fillStyle(MERC_HUD[id]?.color ?? 0xffffff, 1);
+      dot.fillStyle(MERC_HUD[id]?.color ?? 0xffffff, present.has(id) ? 1 : 0.25);
       dot.fillCircle(x + 16 + j * 13, rowY + rowH / 2, 5);
       this.synergyPanel.add(dot);
     });
@@ -524,7 +539,23 @@ export class GameHud {
     const nameX = x + 16 + combo.classes.length * 13;
     this.synergyPanel.add(
       this.scene.add
-        .text(nameX, rowY + 5, combo.name, { fontFamily: FONT, fontSize: "14px", color: COLOR.timer })
+        .text(nameX, rowY + 5, combo.name, {
+          fontFamily: FONT,
+          fontSize: "14px",
+          color: active ? COLOR.timer : COLOR.ash,
+        })
+        .setScrollFactor(0),
+    );
+
+    const have = combo.classes.filter((id) => present.has(id)).length;
+    this.synergyPanel.add(
+      this.scene.add
+        .text(x + w - 12, rowY + 6, `${have}/${combo.classes.length}`, {
+          fontFamily: FONT,
+          fontSize: "12px",
+          color: active ? COLOR.timer : COLOR.ash,
+        })
+        .setOrigin(1, 0)
         .setScrollFactor(0),
     );
 
@@ -533,11 +564,28 @@ export class GameHud {
       .setScrollFactor(0)
       .setInteractive();
     const show = (): void =>
-      this.showTooltip(`${combo.name}\n${combo.desc}`, x + w, rowY, 0xc47aff, "right");
+      this.showTooltip(this.synergyTooltipText(combo, present, active), x + w, rowY, 0xc47aff, "right");
     zone.on("pointerover", show);
     zone.on("pointermove", show);
     zone.on("pointerout", () => this.hideTooltip());
     this.synergyPanel.add(zone);
+  }
+
+  /** 시너지 행 툴팁 텍스트. 발동이면 효과만, 미발동이면 부족한 직업 안내를 덧붙인다. */
+  private synergyTooltipText(combo: ComboSynergy, present: Set<string>, active: boolean): string {
+    const need = combo.classes
+      .map((id) => MERC_HUD[id]?.label ?? id)
+      .join(" + ");
+    const header = active ? combo.name : `${combo.name} (미발동)`;
+    const lines = [header, `필요: ${need}`, combo.desc];
+    if (!active) {
+      const missing = combo.classes
+        .filter((id) => !present.has(id))
+        .map((id) => MERC_HUD[id]?.label ?? id)
+        .join(", ");
+      lines.push(`▶ ${missing} 합류 시 발동`);
+    }
+    return lines.join("\n");
   }
 
   private layoutMercBar(): void {
