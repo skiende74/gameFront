@@ -4,7 +4,7 @@ import { MERC_COMBAT } from "../data/mercs";
 import { RANK_BADGE, applyRankToCombat } from "../data/unitRanks";
 import { GAME_EVENT, type GameState } from "../state/GameState";
 import type { PartyUnit } from "../state/partyUnits";
-import { SYNERGY_DEFS, activeTier, nextTier } from "../data/synergies";
+import { activeSynergies, presentClasses, type ComboSynergy } from "../data/synergies";
 
 const FONT = "Galmuri11, monospace";
 
@@ -51,8 +51,8 @@ export class GameHud {
   private readonly synergyGeom = {
     x: HUD.margin,
     y: HUD.margin + HUD.panelHeight + 8 + 42 + 12,
-    w: 230,
-    rowH: 52,
+    w: 214,
+    rowH: 28,
     headerH: 26,
   };
 
@@ -153,14 +153,12 @@ export class GameHud {
 
   /** GameState.party(중복 포함 배열)를 슬롯/수량 배지로 동기화한다. */
   private syncParty(party: PartyUnit[]): void {
-    const counts = new Map<string, number>();
-    this.hideMercTooltip();
+    this.hideTooltip();
     for (const slot of this.slots) slot.container.destroy();
     this.slots.length = 0;
 
     for (const unit of party) {
       if (!MERC_HUD[unit.id]) continue;
-      counts.set(unit.id, (counts.get(unit.id) ?? 0) + unit.rank);
       const slot = this.createSlot(unit.id);
       slot.count = unit.rank;
       slot.badgeText.setText(RANK_BADGE[unit.rank]);
@@ -169,7 +167,7 @@ export class GameHud {
       this.slots.push(slot);
     }
     this.layoutMercBar();
-    this.refreshSynergy(counts);
+    this.refreshSynergy(presentClasses(party));
   }
 
   private buildTopBar(): void {
@@ -426,29 +424,43 @@ export class GameHud {
   }
 
   private attachTooltip(slot: MercSlot, unit: PartyUnit): void {
-    slot.container.on("pointerover", () => this.showMercTooltip(slot, unit));
-    slot.container.on("pointermove", () => this.showMercTooltip(slot, unit));
-    slot.container.on("pointerout", () => this.hideMercTooltip());
+    const show = (): void => {
+      const anchorY = slot.container.y - HUD.slotBox / 2 - 8;
+      this.showTooltip(this.tooltipTextFor(unit), slot.container.x, anchorY, MERC_HUD[unit.id].color, "above");
+    };
+    slot.container.on("pointerover", show);
+    slot.container.on("pointermove", show);
+    slot.container.on("pointerout", () => this.hideTooltip());
   }
 
-  private showMercTooltip(slot: MercSlot, unit: PartyUnit): void {
-    const text = this.tooltipTextFor(unit);
+  /** 공용 툴팁. place="above"는 앵커 위쪽, "right"는 앵커 오른쪽에 띄운다. */
+  private showTooltip(
+    text: string,
+    anchorX: number,
+    anchorY: number,
+    accent: number,
+    place: "above" | "right",
+  ): void {
     this.mercTooltipText.setText(text);
-
     const w = Math.max(164, this.mercTooltipText.width + 20);
     const h = this.mercTooltipText.height + 16;
-    const x = Phaser.Math.Clamp(slot.container.x - w / 2, 12, GAME_WIDTH - w - 12);
-    const y = slot.container.y - HUD.slotBox / 2 - h - 12;
+    const x = place === "right" ? anchorX + 10 : anchorX - w / 2;
+    const y = place === "right" ? anchorY : anchorY - h;
 
     this.mercTooltipBg.clear();
     this.mercTooltipBg.fillStyle(COLOR.panelFill, 0.94);
     this.mercTooltipBg.fillRoundedRect(0, 0, w, h, 8);
-    this.mercTooltipBg.lineStyle(2, MERC_HUD[unit.id].color, 0.85);
+    this.mercTooltipBg.lineStyle(2, accent, 0.85);
     this.mercTooltipBg.strokeRoundedRect(0, 0, w, h, 8);
-    this.mercTooltip.setPosition(x, y).setVisible(true);
+    this.mercTooltip
+      .setPosition(
+        Phaser.Math.Clamp(x, 12, GAME_WIDTH - w - 12),
+        Phaser.Math.Clamp(y, 12, GAME_HEIGHT - h - 12),
+      )
+      .setVisible(true);
   }
 
-  private hideMercTooltip(): void {
+  private hideTooltip(): void {
     if (this.mercTooltip) this.mercTooltip.setVisible(false);
   }
 
@@ -471,19 +483,17 @@ export class GameHud {
     this.layer.add(this.synergyPanel);
   }
 
-  /** 좌측 조합(시너지) 패널을 현재 파티 구성에 맞춰 다시 그린다(롤토체스식 표시). */
-  private refreshSynergy(counts: Map<string, number>): void {
+  /** 좌측 조합(시너지) 패널을 발동 중인 조합으로 다시 그린다. 행에 마우스를 올리면 효과 툴팁이 뜬다. */
+  private refreshSynergy(present: Set<string>): void {
     if (!this.synergyPanel) return;
     this.synergyPanel.removeAll(true);
+    this.hideTooltip();
 
-    const present = Object.values(SYNERGY_DEFS)
-      .map((def) => ({ def, count: counts.get(def.id) ?? 0 }))
-      .filter((entry) => entry.count > 0)
-      .sort((a, b) => b.count - a.count);
-    if (present.length === 0) return;
+    const active = activeSynergies(present);
+    if (active.length === 0) return;
 
     const { x, y, w, rowH, headerH } = this.synergyGeom;
-    const panelH = headerH + present.length * rowH + 8;
+    const panelH = headerH + active.length * rowH + 8;
 
     const bg = this.scene.add.graphics().setScrollFactor(0);
     bg.fillStyle(COLOR.panelFill, 0.82);
@@ -494,57 +504,40 @@ export class GameHud {
 
     this.synergyPanel.add(
       this.scene.add
-        .text(x + 12, y + 7, "조합", {
-          fontFamily: FONT,
-          fontSize: "13px",
-          color: COLOR.bone,
-        })
+        .text(x + 12, y + 7, "시너지", { fontFamily: FONT, fontSize: "13px", color: COLOR.bone })
         .setScrollFactor(0),
     );
 
-    present.forEach(({ def, count }, i) => {
-      const rowY = y + headerH + i * rowH;
-      const info = MERC_HUD[def.id];
-      const active = activeTier(def, count);
-      const next = nextTier(def, count);
+    active.forEach((combo, i) => this.drawSynergyRow(combo, y + headerH + i * rowH));
+  }
 
-      const pip = this.scene.add.graphics().setScrollFactor(0);
-      pip.fillStyle(info.color, active ? 1 : 0.4);
-      pip.fillCircle(x + 18, rowY + 12, 6);
-      this.synergyPanel.add(pip);
+  private drawSynergyRow(combo: ComboSynergy, rowY: number): void {
+    const { x, w, rowH } = this.synergyGeom;
 
-      this.synergyPanel.add(
-        this.scene.add
-          .text(x + 32, rowY + 4, def.name, {
-            fontFamily: FONT,
-            fontSize: "14px",
-            color: active ? COLOR.timer : COLOR.bone,
-          })
-          .setScrollFactor(0),
-      );
-      this.synergyPanel.add(
-        this.scene.add
-          .text(x + w - 12, rowY + 4, `${count}`, {
-            fontFamily: FONT,
-            fontSize: "14px",
-            color: active ? COLOR.timer : COLOR.ash,
-          })
-          .setOrigin(1, 0)
-          .setScrollFactor(0),
-      );
-
-      const desc = active ? active.desc : next ? `${next.count}명: ${next.desc}` : "";
-      this.synergyPanel.add(
-        this.scene.add
-          .text(x + 32, rowY + 22, desc, {
-            fontFamily: FONT,
-            fontSize: "11px",
-            color: active ? "#c9b8e8" : COLOR.ash,
-            wordWrap: { width: w - 44 },
-          })
-          .setScrollFactor(0),
-      );
+    combo.classes.forEach((id, j) => {
+      const dot = this.scene.add.graphics().setScrollFactor(0);
+      dot.fillStyle(MERC_HUD[id]?.color ?? 0xffffff, 1);
+      dot.fillCircle(x + 16 + j * 13, rowY + rowH / 2, 5);
+      this.synergyPanel.add(dot);
     });
+
+    const nameX = x + 16 + combo.classes.length * 13;
+    this.synergyPanel.add(
+      this.scene.add
+        .text(nameX, rowY + 5, combo.name, { fontFamily: FONT, fontSize: "14px", color: COLOR.timer })
+        .setScrollFactor(0),
+    );
+
+    const zone = this.scene.add
+      .rectangle(x + w / 2, rowY + rowH / 2, w, rowH, 0x000000, 0)
+      .setScrollFactor(0)
+      .setInteractive();
+    const show = (): void =>
+      this.showTooltip(`${combo.name}\n${combo.desc}`, x + w, rowY, 0xc47aff, "right");
+    zone.on("pointerover", show);
+    zone.on("pointermove", show);
+    zone.on("pointerout", () => this.hideTooltip());
+    this.synergyPanel.add(zone);
   }
 
   private layoutMercBar(): void {
