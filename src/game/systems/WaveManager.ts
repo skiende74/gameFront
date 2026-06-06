@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { Enemy } from "../entities/Enemy";
 import { ENEMY_DEFS, enemyTex, type EnemyId } from "../data/enemies";
-import { desiredAliveCount, enemyScaling, phaseForWave } from "../data/waves";
+import { desiredAliveCount, enemyScaling, rollSpawnType } from "../data/waves";
 import type { GameState } from "../state/GameState";
 
 const MAX_ENEMIES = 80;
@@ -86,8 +86,7 @@ export class WaveManager {
   }
 
   private spawnOne(player: Phaser.Physics.Arcade.Sprite): void {
-    const types = phaseForWave(this.state.wave).types;
-    const typeId = Phaser.Utils.Array.GetRandom(types) as EnemyId;
+    const typeId = rollSpawnType(this.state.wave);
     const def = ENEMY_DEFS[typeId];
 
     const angle = Math.random() * Math.PI * 2;
