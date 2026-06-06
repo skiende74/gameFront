@@ -6,6 +6,7 @@ import { MERC_COMBAT, type MercCombat } from "../data/mercs";
 import { GAME_EVENT, type GameState } from "../state/GameState";
 import type { ProjectileManager } from "./ProjectileManager";
 import type { SfxManager } from "./SfxManager";
+import { getSplashTargets } from "./meleeSplash";
 
 const CLUMP_SPACING_X = 32;
 const CLUMP_SPACING_Y = 20;
@@ -133,9 +134,7 @@ export class MercManager {
     switch (combat.role) {
       case "melee": {
         this.sfx.play("swordAttack");
-        const killed = target.takeDamage(damage);
-        this.sfx.play(killed ? "enemyDeath" : "hitFlesh");
-        if (killed) this.state.addKill(target.def.score);
+        this.damageMeleeTargets(target, damage, combat.aoeRadius ?? 0);
         this.meleeSlash(x, y, target.x, target.y);
         break;
       }
@@ -154,6 +153,35 @@ export class MercManager {
 
   private cooldownFor(combat: MercCombat): number {
     return combat.cooldownMs / this.state.mercenaryAttackSpeedMultiplier;
+  }
+
+  private damageMeleeTargets(target: Enemy, damage: number, splashRadius: number): void {
+    if (splashRadius <= 0) {
+      this.damageEnemy(target, damage);
+      return;
+    }
+
+    const origin = this.bodyCenter(target);
+    const splashCandidates = this.getEnemies().getChildren().map((obj) => {
+      const enemy = obj as Enemy;
+      const center = this.bodyCenter(enemy);
+      return {
+        enemy,
+        targetable: enemy.targetable,
+        x: center.x,
+        y: center.y,
+      };
+    });
+
+    for (const splashTarget of getSplashTargets(splashCandidates, origin, splashRadius)) {
+      this.damageEnemy(splashTarget.enemy, damage);
+    }
+  }
+
+  private damageEnemy(enemy: Enemy, damage: number): void {
+    const killed = enemy.takeDamage(damage);
+    this.sfx.play(killed ? "enemyDeath" : "hitFlesh");
+    if (killed) this.state.addKill(enemy.def.score);
   }
 
   private nearestEnemy(x: number, y: number, range: number): Enemy | null {
