@@ -129,7 +129,7 @@ export const CLASS_DEFS: Record<string, ClassDef> = {
   sword: { folder: "Swordsman", idleFrames: 6, walkFrames: 8, attackFile: "Attack01" },
   bow: { folder: "Archer", idleFrames: 6, walkFrames: 8, attackFile: "Attack01", attackFrameRate: 36 },
   mage: { folder: "Wizard", idleFrames: 6, walkFrames: 8, attackFile: "Attack01" },
-  cleric: { folder: "Priest", idleFrames: 6, walkFrames: 8, attackFile: "Attack" },
+  cleric: { folder: "Priest", idleFrames: 6, walkFrames: 8, attackFile: "Heal" },
 };
 
 export function classSheetPath(folder: string, anim: string): string {

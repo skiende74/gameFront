@@ -1,14 +1,13 @@
 import type Phaser from "phaser";
 import { CLASS_ASSET_BASE, CLASS_DEFS, CLASS_FRAME } from "../config.ts";
 
-type AttackEffectId = keyof typeof CLASS_DEFS;
-
-const EFFECT_FILES: Record<AttackEffectId, string> = {
+const EFFECT_FILES = {
   sword: "Attack01",
   bow: "Attack01",
   mage: "Attack01",
-  cleric: "Attack",
-};
+} as const;
+
+type AttackEffectId = keyof typeof EFFECT_FILES;
 
 export const attackEffectTex = (id: string): string => `tex-attack-effect-${id}`;
 export const attackEffectAnimKey = (id: string): string => `attack-effect-${id}`;
