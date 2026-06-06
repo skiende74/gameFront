@@ -4,6 +4,7 @@ import { Mercenary } from "../entities/Mercenary";
 import { Enemy } from "../entities/Enemy";
 import { MERC_COMBAT, type MercCombat } from "../data/mercs";
 import { RANK_BADGE, applyRankToCombat } from "../data/unitRanks";
+import { applySynergyToCombat, presentClasses } from "../data/synergies";
 import { GAME_EVENT, type GameState, type UnitRankUpPayload } from "../state/GameState";
 import type { PartyUnit } from "../state/partyUnits";
 import type { ProjectileManager } from "./ProjectileManager";
@@ -71,7 +72,9 @@ export class MercManager {
 
   private combatFor(unit: PartyUnit): MercCombat | null {
     const base = MERC_COMBAT[unit.id];
-    return base ? applyRankToCombat(base, unit.rank) : null;
+    if (!base) return null;
+    const ranked = applyRankToCombat(base, unit.rank);
+    return applySynergyToCombat(ranked, presentClasses(this.state.party));
   }
 
   private onUnitRankUp(unit: UnitRankUpPayload): void {
@@ -164,24 +167,27 @@ export class MercManager {
   }
 
   private runCombat(merc: Mercenary): void {
-    if (merc.combat.role === "heal") {
+    const combat = this.combatFor(merc.unit);
+    if (!combat) return;
+
+    if (combat.role === "heal") {
       if (merc.ready) {
-        merc.resetCooldown(this.cooldownFor(merc.combat));
+        merc.resetCooldown(this.cooldownFor(combat));
         merc.playAttackCue();
-        this.scheduleHeal(merc.combat.heal ?? 0);
+        this.scheduleHeal(combat.heal ?? 0);
       }
       return;
     }
 
     const center = this.bodyCenter(merc);
-    const target = this.nearestEnemy(center.x, center.y, merc.combat.range);
+    const target = this.nearestEnemy(center.x, center.y, combat.range);
     if (!target) return;
 
     merc.faceTo(target.x);
     if (!merc.ready) return;
-    merc.resetCooldown(this.cooldownFor(merc.combat));
+    merc.resetCooldown(this.cooldownFor(combat));
     merc.playAttackCue();
-    this.performAttack(merc.combat, merc.x, merc.y, target);
+    this.performAttack(combat, merc.x, merc.y, target);
   }
 
   /** 역할별 실제 타격/투사체 발사. 플레이어와 용병이 공유한다. */

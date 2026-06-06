@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { HUD, MAX_HIRED_MERCS } from "../config";
 import { bossIdForWave, isBossWave, type EnemyId } from "../data/enemies";
 import { MERC_IDS } from "../data/mercs";
+import { presentClasses, synergyDamageTakenMul } from "../data/synergies";
 import {
   addUnitWithMerge,
   canAddOrMergeUnit,
@@ -131,9 +132,15 @@ export class GameState extends Phaser.Events.EventEmitter {
     return canAddOrMergeUnit(this.party, id, MAX_HIRED_MERCS);
   }
 
+  /** 발동 중인 조합 시너지에 따른 "받는 피해" 배율(수호 서약 등). */
+  get damageTakenMultiplier(): number {
+    return synergyDamageTakenMul(presentClasses(this.party));
+  }
+
   damagePlayer(amount: number): void {
     if (this.over) return;
-    this.hp = Phaser.Math.Clamp(this.hp - amount, 0, this.maxHp);
+    const taken = amount * this.damageTakenMultiplier;
+    this.hp = Phaser.Math.Clamp(this.hp - taken, 0, this.maxHp);
     this.emit(GAME_EVENT.hp, this.hp);
     if (this.hp <= 0) this.finish(false);
   }
