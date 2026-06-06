@@ -6,6 +6,9 @@ import {
   enemyTex,
   type EnemyDef,
 } from "../data/enemies";
+import type { EnemyScaling } from "../data/waves";
+
+const NO_SCALING: EnemyScaling = { hp: 1, damage: 1, speed: 1 };
 
 const ENEMY_DEPTH = 15;
 
@@ -27,13 +30,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, texture);
   }
 
-  /** 풀에서 꺼내 특정 종류로 초기화하고 화면에 배치한다. */
-  spawn(def: EnemyDef, x: number, y: number): void {
+  /** 풀에서 꺼내 특정 종류로 초기화하고 화면에 배치한다. 웨이브 배율을 곱해 스펙을 키운다. */
+  spawn(def: EnemyDef, x: number, y: number, scaling: EnemyScaling = NO_SCALING): void {
     this.def = def;
-    this.hp = def.hp;
-    this.maxHp = def.hp;
-    this.speed = def.speed;
-    this.damage = def.damage;
+    this.hp = Math.round(def.hp * scaling.hp);
+    this.maxHp = this.hp;
+    this.speed = def.speed * scaling.speed;
+    this.damage = Math.max(1, Math.round(def.damage * scaling.damage));
     this.dying = false;
     this.onDeath = undefined;
 

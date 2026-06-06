@@ -23,6 +23,22 @@ export function phaseForWave(wave: number): WavePhase {
   );
 }
 
+/**
+ * 웨이브에 따른 잡몹 능력치 배율.
+ * 기존엔 동시 생존 수만 늘고 적 1마리 스펙이 고정이라 후반이 쉬웠다.
+ * HP는 가파르게, 공격력은 완만하게, 속도는 살짝만 키워 파워 곡선을 맞춘다.
+ */
+export type EnemyScaling = { hp: number; damage: number; speed: number };
+
+export function enemyScaling(wave: number): EnemyScaling {
+  const w = Math.max(1, wave) - 1;
+  return {
+    hp: 1 + 0.13 * w,
+    damage: 1 + 0.06 * w,
+    speed: 1 + 0.01 * w,
+  };
+}
+
 /** 현재 웨이브에서 유지해야 할 동시 생존 적 수(구간 내 선형 증가). */
 export function desiredAliveCount(wave: number): number {
   const phase = phaseForWave(wave);

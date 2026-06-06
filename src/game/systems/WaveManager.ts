@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { Enemy } from "../entities/Enemy";
 import { ENEMY_DEFS, enemyTex, type EnemyId } from "../data/enemies";
-import { desiredAliveCount, phaseForWave } from "../data/waves";
+import { desiredAliveCount, enemyScaling, phaseForWave } from "../data/waves";
 import type { GameState } from "../state/GameState";
 
 const MAX_ENEMIES = 80;
@@ -97,6 +97,6 @@ export class WaveManager {
 
     const enemy = this.group.get(x, y, enemyTex(typeId, "walk")) as Enemy | null;
     if (!enemy) return;
-    enemy.spawn(def, x, y);
+    enemy.spawn(def, x, y, enemyScaling(this.state.wave));
   }
 }
