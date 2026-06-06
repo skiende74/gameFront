@@ -57,8 +57,8 @@ const TORCH_ANIM_KEY = "torch-burn";
  */
 const HIT_GLOBAL_GAP_MS = 160;
 
-/** 보스 공격: 사거리(px) / 쿨타임(ms) / 모션 시작 후 타격 판정까지(ms). */
-const BOSS_ATTACK_RANGE = 132;
+/** 보스 공격: 타격 판정 여유 거리(px) / 쿨타임(ms) / 모션 시작 후 타격 판정까지(ms). */
+const BOSS_STRIKE_MARGIN = 60;
 const BOSS_ATTACK_COOLDOWN_MS = 1500;
 const BOSS_ATTACK_WINDUP_MS = 320;
 
@@ -277,11 +277,15 @@ export class DungeonScene extends Phaser.Scene {
     _player: Phaser.GameObjects.GameObject,
     enemyObj: Phaser.GameObjects.GameObject,
   ): void {
-    if (this.paused || this.waitingForUpgrade || this.hurtCooldown > 0 || this.state.over) return;
+    if (this.paused || this.waitingForUpgrade || this.state.over) return;
     const enemy = enemyObj as Enemy;
     if (!enemy.targetable) return;
-    // 보스는 접촉 피해 대신 공격 모션으로만 타격한다.
-    if (enemy.def.boss) return;
+    // 보스는 접촉 피해 대신, 닿으면 공격 모션을 발동해 타격한다.
+    if (enemy.def.boss) {
+      this.tryBossAttack(enemy);
+      return;
+    }
+    if (this.hurtCooldown > 0) return;
 
     // 적 개체별 쿨다운: 같은 적은 일정 시간 안에 다시 때리지 못한다.
     const now = this.time.now;
@@ -368,16 +372,16 @@ export class DungeonScene extends Phaser.Scene {
     }
   }
 
-  /** 보스가 사거리 안에 들어오면 공격 모션을 재생하고, 모션 도중 타격 판정을 낸다. */
+  /** 보스 공격 쿨다운만 매 프레임 줄인다. 실제 발동은 접촉(onEnemyContact) 시점에 한다. */
   private updateBossAttack(deltaMs: number): void {
     if (this.bossAttackCooldown > 0) this.bossAttackCooldown -= deltaMs;
-    if (this.bossAttacking || this.paused || this.waitingForUpgrade || this.state.over) return;
+  }
 
-    const boss = this.boss;
-    if (!boss || this.bossAttackCooldown > 0) return;
-
-    const dist = Phaser.Math.Distance.Between(boss.x, boss.y, this.player.x, this.player.y);
-    if (dist > BOSS_ATTACK_RANGE) return;
+  /** 보스가 플레이어에 닿았을 때, 쿨다운/상태를 확인하고 공격 모션을 발동한다. */
+  private tryBossAttack(boss: Enemy): void {
+    if (this.bossAttacking || this.bossAttackCooldown > 0) return;
+    if (this.paused || this.waitingForUpgrade || this.state.over) return;
+    if (!boss.targetable) return;
     this.performBossAttack(boss);
   }
 
@@ -416,16 +420,23 @@ export class DungeonScene extends Phaser.Scene {
     fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => fx.destroy());
   }
 
-  /** 보스 타격 판정: 여전히 사거리 안이면 피해 + 임팩트 연출. */
+  /** 보스 타격 판정: 여전히 보스 바디 근처면 피해 + 임팩트 연출. */
   private bossStrike(boss: Enemy): void {
     if (!boss.targetable || this.state.over || this.paused) return;
-    const dist = Phaser.Math.Distance.Between(boss.x, boss.y, this.player.x, this.player.y);
-    if (dist > BOSS_ATTACK_RANGE + 48) return;
+    if (!this.bossInStrikeRange(boss)) return;
 
     this.state.damagePlayer(boss.damage);
     this.sfx.play("playerHurt");
     if (!this.state.over) this.flashPlayerHurt();
     this.cameras.main.shake(170, 0.007);
+  }
+
+  /** 보스 바디 중심에서 플레이어까지 거리가 바디 크기+여유 안인지(거대 스프라이트 대응). */
+  private bossInStrikeRange(boss: Enemy): boolean {
+    const b = boss.body as Phaser.Physics.Arcade.Body;
+    const p = this.player.body as Phaser.Physics.Arcade.Body;
+    const reach = Math.max(b.halfWidth, b.halfHeight) + BOSS_STRIKE_MARGIN;
+    return Phaser.Math.Distance.Between(b.center.x, b.center.y, p.center.x, p.center.y) <= reach;
   }
 
   private endBossAttack(boss: Enemy): void {
