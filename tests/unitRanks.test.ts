@@ -31,9 +31,9 @@ assert.equal(bow2.range, 340);
 assert.equal(bow2.cooldownMs, 680);
 
 const bow3 = applyRankToCombat(bow, 3);
-assert.equal(bow3.atk, 29);
-assert.equal(bow3.range, 365);
-assert.equal(bow3.cooldownMs, 560);
+assert.equal(bow3.atk, 38);
+assert.equal(bow3.range, 390);
+assert.equal(bow3.cooldownMs, 480);
 
 const mage2 = applyRankToCombat(mage, 2);
 assert.equal(mage2.atk, 22);
@@ -42,7 +42,7 @@ assert.equal(mage2.cooldownMs, 1530);
 assert.equal(mage2.aoeRadius, 95);
 
 const mage3 = applyRankToCombat(mage, 3);
-assert.equal(mage3.atk, 34);
-assert.equal(mage3.range, 325);
-assert.equal(mage3.cooldownMs, 1260);
-assert.equal(mage3.aoeRadius, 120);
+assert.equal(mage3.atk, 45);
+assert.equal(mage3.range, 340);
+assert.equal(mage3.cooldownMs, 1080);
+assert.equal(mage3.aoeRadius, 150);

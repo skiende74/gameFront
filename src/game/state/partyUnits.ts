@@ -19,23 +19,32 @@ export function createPartyUnit(id: string, opts: { isPlayer?: boolean } = {}): 
 }
 
 export function addUnitWithMerge(party: PartyUnit[], id: string): PartyUnit[] {
-  const next = party.map((unit) => ({ ...unit }));
-  const rank2 = next.find((unit) => unit.id === id && unit.rank === 2);
-  if (rank2) {
-    rank2.rank = 3;
-    return next;
-  }
-
-  const rank1 = next.find((unit) => unit.id === id && unit.rank === 1);
-  if (rank1) {
-    rank1.rank = 2;
-    return next;
-  }
-
-  return [...next, createPartyUnit(id)];
+  return mergeSameRank([...cloneParty(party), createPartyUnit(id)], id);
 }
 
 export function canAddOrMergeUnit(party: PartyUnit[], id: string, maxFollowers: number): boolean {
-  if (party.some((unit) => unit.id === id && unit.rank < 3)) return true;
-  return party.filter((unit) => !unit.isPlayer).length < maxFollowers;
+  const preview = mergeSameRank([...cloneParty(party), { uid: "preview", id, rank: 1 }], id);
+  return preview.filter((unit) => !unit.isPlayer).length <= maxFollowers;
+}
+
+function cloneParty(party: PartyUnit[]): PartyUnit[] {
+  return party.map((unit) => ({ ...unit }));
+}
+
+function mergeSameRank(party: PartyUnit[], id: string): PartyUnit[] {
+  let next = party;
+  for (const rank of [1, 2] as const) {
+    while (true) {
+      const matches = next.filter((unit) => unit.id === id && unit.rank === rank);
+      if (matches.length < 2) break;
+
+      const target = matches.find((unit) => unit.isPlayer) ?? matches[0];
+      const consumed = matches.find((unit) => unit.uid !== target.uid);
+      if (!consumed) break;
+
+      target.rank = (rank + 1) as UnitRank;
+      next = next.filter((unit) => unit.uid !== consumed.uid);
+    }
+  }
+  return next;
 }

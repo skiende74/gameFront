@@ -12,7 +12,12 @@ assert.equal(rank2[0].id, "bow");
 assert.equal(rank2[0].rank, 2);
 assert.equal(rank2[0].isPlayer, true);
 
-const rank3 = addUnitWithMerge(rank2, "bow");
+const rank2AndRank1 = addUnitWithMerge(rank2, "bow");
+assert.equal(rank2AndRank1.length, 2);
+assert.equal(rank2AndRank1[0].rank, 2);
+assert.equal(rank2AndRank1[1].rank, 1);
+
+const rank3 = addUnitWithMerge(rank2AndRank1, "bow");
 assert.equal(rank3.length, 1);
 assert.equal(rank3[0].rank, 3);
 
@@ -28,3 +33,11 @@ const full = [
 ];
 assert.equal(canAddOrMergeUnit(full, "cleric", 2), false);
 assert.equal(canAddOrMergeUnit(full, "bow", 2), true);
+
+const fullWithRank2Only = [
+  createPartyUnit("sword", { isPlayer: true }),
+  createPartyUnit("bow"),
+  createPartyUnit("mage"),
+];
+fullWithRank2Only[1].rank = 2;
+assert.equal(canAddOrMergeUnit(fullWithRank2Only, "bow", 2), false);

@@ -18,17 +18,17 @@ export const RANK_BADGE: Record<UnitRank, string> = {
 const BASE_BONUS: Record<UnitRank, RankBonus> = {
   1: { powerMultiplier: 1, cooldownMultiplier: 1, rangeBonus: 0, aoeRadiusBonus: 0 },
   2: { powerMultiplier: 1.6, cooldownMultiplier: 0.85, rangeBonus: 10, aoeRadiusBonus: 15 },
-  3: { powerMultiplier: 2.4, cooldownMultiplier: 0.7, rangeBonus: 25, aoeRadiusBonus: 30 },
+  3: { powerMultiplier: 3.2, cooldownMultiplier: 0.6, rangeBonus: 40, aoeRadiusBonus: 55 },
 };
 
 const ROLE_BONUS: Partial<Record<string, Partial<Record<UnitRank, Partial<RankBonus>>>>> = {
   bow: {
     2: { rangeBonus: 20 },
-    3: { rangeBonus: 45 },
+    3: { rangeBonus: 70 },
   },
   mage: {
     2: { aoeRadiusBonus: 20 },
-    3: { aoeRadiusBonus: 45 },
+    3: { aoeRadiusBonus: 75 },
   },
 };
 
