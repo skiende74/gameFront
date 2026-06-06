@@ -392,16 +392,17 @@ export class DungeonScene extends Phaser.Scene {
     boss.setFlipX(this.player.x < boss.x);
 
     const attackKey = enemyAnimKey(boss.def.id, "attack");
-    const hasAnim = this.anims.exists(attackKey);
-    if (hasAnim) {
+    // 종료는 타이머로 보장한다. (피격 시 hurt 모션이 attack을 덮어쓰면
+    //  animationcomplete 이벤트가 오지 않아 보스가 영구히 고착되기 때문)
+    let duration = BOSS_ATTACK_WINDUP_MS + 220;
+    if (this.anims.exists(attackKey)) {
       boss.play(attackKey, true);
       this.playBossAttackEffect(boss);
-      boss.once(`animationcomplete-${attackKey}`, () => this.endBossAttack(boss));
-    } else {
-      this.time.delayedCall(BOSS_ATTACK_WINDUP_MS + 220, () => this.endBossAttack(boss));
+      duration = this.anims.get(attackKey)?.duration || duration;
     }
 
     this.time.delayedCall(BOSS_ATTACK_WINDUP_MS, () => this.bossStrike(boss));
+    this.time.delayedCall(duration, () => this.endBossAttack(boss));
   }
 
   /** 보스 공격 모션에 맞춰 보스 위치에 전용 공격 이펙트(Split Effects)를 겹쳐 재생한다. */
