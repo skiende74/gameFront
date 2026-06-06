@@ -104,403 +104,56 @@ mage: { atk: 14, range: 300, cooldownMs: 1800, aoeRadius: 75, ... }
 
 ---
 
-## 폐기된 초안: 롤토체스식 시너지
+## 직업 조합 시너지 (구현 완료)
 
-> 아래 초안은 "같이 있으면 강해지는 시너지" 방식이라 현재 의도와 다르다. 실제 구현은 하단의 **동일 직업 합체/승급 구현계획**을 따른다.
+> **방향:** 같은 직업끼리는 합체/승급으로 처리하고, **시너지는 서로 다른 직업이 함께 있을 때만** 발동한다.  
+> **발동 조건:** 시너지에 필요한 직업이 파티(플레이어 본체 포함)에 **모두 1명 이상** 존재하면 활성화된다.  
+> **중첩:** 조건을 만족하는 조합은 모두 동시에 적용된다. (예: 4직업이면 사방진 + 하위 조합들이 함께 켜짐)
 
-같은 직업 N명을 모으면 시너지가 발동하는 구조. 군대 규모가 작고(플레이어 포함 최대 6명) 직업이 4종이라 잘 어울린다.
+### 구현 파일
 
-### 설계 전제
+- `src/game/data/synergies.ts` — 조합 시너지 정의, 발동 판정, 전투 스펙 보정, 받는 피해 배율.
+- `src/game/systems/MercManager.ts` — 공격 시점에 `등급 보정 → 시너지 보정` 순으로 전투 스펙 계산.
+- `src/game/state/GameState.ts` — `damagePlayer()`에서 시너지 "받는 피해" 배율을 곱해 적용.
+- `src/game/hud/GameHud.ts` — 좌측 패널에 발동 중인 조합 표시 + 행 호버 시 효과 툴팁.
 
-- 최대 편성 = 플레이어 본체(party[0]) + 고용 5명 = **6유닛**, 직업 4종.
-- 임계값은 **2명 / 3명** 두 단계가 적당 (롤토체스의 2/4/6처럼 잘게 못 나눔).
-- **플레이어 직업도 카운트에 포함** → 시작 직업 선택이 빌드 방향을 결정 (지금은 시작 직업이 그냥 1유닛일 뿐 의미가 약함).
+### 시너지 표 (총 10종)
 
-### 직업별 시너지 (단일 직업 N명)
+직업: `sword`(검사·근접 스플래시) / `bow`(궁수·원거리 단일) / `mage`(마법사·원거리 광역) / `cleric`(성직자·회복).  
+역할 키워드: 근접=melee, 원거리=ranged(궁수)·aoe(마법사), 힐=heal.
 
-기존 스탯(atk·range·cooldown·aoeRadius·heal)에 얹기 좋게 설계.
-
-| 직업 | 2명 | 3명+ | 컨셉 |
+| 조합 | 이름 | 효과 | 적용 대상 |
 |---|---|---|---|
-| **검사** (전열) | 공격범위 +25%, 검사 받는 피해 -20% | 적 넉백 + **플레이어 받는 피해 -20%** (전열 방벽) | `todo.md`의 "검사 범위·딜 올리기" 의도와 직결. 탱킹 빌드 |
-| **궁수** (연사) | 공격 시 화살 **관통**(일직선 다중 타격) | 공속 +30% 또는 치명타 해금 | 원거리 폭딜. 직선 정렬 유도 |
-| **마법사** (광역) | 폭발 반경 75→110 | 폭발 자리에 **장판(지속 피해)** 생성 | 다수 잡몹 학살 특화 |
-| **성직자** (축복) | 힐량 +50% + **주변 용병도 회복**(현재는 플레이어만) | 주기적 **전체 보호막** | 장기전·고웨이브 생존 |
+| 검사+궁수 | **엄호 사격** | 공격력 +15% | 궁수(ranged) |
+| 검사+마법사 | **집결 폭발** | 폭발 반경 +25px | 마법사(aoe) |
+| 검사+성직자 | **수호 서약** | 받는 피해 -15% | 전역(플레이어) |
+| 궁수+마법사 | **포격대** | 사거리 +30px, 공격력 +15% | 원거리(ranged·aoe) |
+| 궁수+성직자 | **축복의 화살** | 공격속도 +20% | 궁수(ranged) |
+| 마법사+성직자 | **정화의 불꽃** | 공격력 +20% | 마법사(aoe) |
+| 검사+궁수+마법사 | **섬멸전** | 공격력 +20% | 전체 |
+| 검사+궁수+성직자 | **정규 원정대** | 공격력 +10%, 받는 피해 -10% | 전체 / 전역 |
+| 궁수+마법사+성직자 | **후방 포대** | 공격력 +30%, **받는 피해 +20%(페널티)** | 원거리 / 전역 |
+| 4직업 전부 | **사방진** | 공격력 +10%, 공격속도 +10%, 받는 피해 -10% | 전체 / 전역 |
 
-핵심: 검사=생존, 궁수=단일딜, 마법사=광역, 성직자=지속력 → **역할이 뚜렷하게 갈리게** 만드는 게 포인트.
+### 효과 적용 규칙
 
-### 혼합 시너지 (크로스 보너스, 선택)
+- **공격력(atkMul)·공격속도(atkSpeedMul)·사거리(rangeBonus)·폭발반경(aoeRadiusBonus)**: 해당 시너지의 `roles`에 맞는 직업의 전투 스펙에만 곱/가산한다. `roles`가 없으면 전 직업 공통.
+- **받는 피해(damageTakenMul)**: 역할과 무관하게 전역(플레이어 피격)에 곱한다. 여러 시너지가 켜지면 배율을 모두 곱한다.
+- 적용 순서: `MERC_COMBAT 원본 → 등급 보정(applyRankToCombat) → 시너지 보정(applySynergyToCombat)`. 이후 기존 전역 강화(`mercenaryDamageMultiplier` 등)가 `damageFor()`/`cooldownFor()`에서 한 번 더 적용된다.
+- `MERC_COMBAT` 원본은 수정하지 않고 매 공격 시점에 보정된 사본을 만든다.
 
-단일 직업만 강하면 "한 직업 몰빵"이 정답이 된다. 견제하려면 혼합 보상을 같이 둔다.
+### HUD 표시
 
-| 시너지 | 조건 | 효과 |
-|---|---|---|
-| **균형 편성** | 검·궁·마 각 1명 이상 | 전체 공격력 +15% |
-| **포격대** | 근접(검사) 0명 + 원거리 3명+ | 딜 +30% **but** 플레이어 받는 피해 +25% (글래스캐논) |
-| **친위대** | 검사 2명 + 성직자 1명 | 검사가 플레이어 주위에 밀착 방어 진형 |
+- 좌측 "시너지" 패널은 **발동 중인 조합만** 직업 색 점 + 이름으로 표시한다.
+- 패널의 각 행에 마우스를 올리면 조합 이름과 상세 효과 설명이 툴팁으로 뜬다(용병 슬롯 툴팁과 공용 로직).
 
-### 드래프트(카드)와의 연결 — 가장 중요
+### 밸런스 메모
 
-롤토체스 시너지를 넣으려면 **카드가 원하는 직업을 뽑을 수 있어야** 빌드가 성립한다. 지금은 9종 중 완전 랜덤 3장이라 "3검사"를 노려도 안 나올 수 있다. 보완책:
-
-- 카드에 **현재 시너지 진행도 표시** ("검사 2/3 — 1명 더 모으면 전열 방벽!").
-- 약한 **천장(pity)**: 같은 고용 카드가 N웨이브 연속 안 나오면 등장 확률 가중.
-- 강화 카드도 "검사 강화 / 궁수 강화"처럼 **직업 귀속 옵션**을 섞어 빌드 색을 진하게.
-
-### 추천 우선순위
-
-1. **검사 3 / 궁수 2 / 마법사 2 / 성직자 2** 단일 시너지부터 (구현 쉽고 체감 큼).
-2. 플레이어 직업을 카운트에 포함 (시작 선택 의미 부여).
-3. 카드에 시너지 진행도 UI.
-4. 여유 되면 혼합 시너지(균형/포격대).
-
-이렇게 하면 "용병 5명 아무거나 풀기"가 아니라 **"내가 무슨 조합을 갈지"** 고민이 생겨서, `todo.md`의 "전략 생각할 요소"가 채워진다.
+- 모든 직업을 모으면 다수 시너지가 동시에 켜져 강해지므로, **후방 포대**에만 페널티(받는 피해 +20%)를 넣어 "원거리 몰빵 글래스캐논"을 견제한다.
+- 둔화·넉백·관통·장판 같은 비수치형 효과는 1차 범위에서 제외하고, 수치형(공격력/공속/사거리/폭발반경/받는 피해)으로만 구현했다. 후속 단계에서 확장 가능.
 
 ---
 
 ## 동일 직업 합체/승급 구현계획
 
 별도 문서로 분리: [docs/mercenary-combination-plan.md](docs/mercenary-combination-plan.md)
-
----
-
-## 폐기된 초안: 단일 직업 2/3 시너지 구현계획
-
-> **목표:** 플레이어 본체를 포함한 `GameState.party`에서 같은 직업이 2명 또는 3명 이상 모이면 해당 직업 전투 스펙에 시너지 보너스를 적용한다.  
-> **범위:** 1차 구현은 단일 직업 시너지(`검사`, `궁수`, `마법사`, `성직자`)만 포함한다. 혼합 시너지, 카드 확률 보정, 신규 패시브 카드는 제외한다.  
-> **원칙:** 3명 이상은 3단계 효과만 적용한다. 4명, 5명, 6명이어도 추가 중첩은 없다.
-
-### 1차 시너지 수치
-
-`3명` 효과는 `2명` 효과에 더하는 값이 아니라 **최종 적용값**으로 둔다. 그래야 밸런스 계산이 단순하다.
-
-| 직업 id | 2명 | 3명 이상 | 구현 방식 |
-|---|---:|---:|---|
-| `sword` | 근접 스플래시 반경 +15px | 근접 스플래시 반경 +35px, 공격력 +10% | `aoeRadius`, `atk` 보정 |
-| `bow` | 공격속도 +15% | 공격속도 +30%, 사거리 +40px | `cooldownMs`, `range` 보정 |
-| `mage` | 폭발 반경 +20px | 폭발 반경 +40px, 공격력 +10% | `aoeRadius`, `atk` 보정 |
-| `cleric` | 회복량 +3 | 회복량 +8, 회복 주기 15% 단축 | `heal`, `cooldownMs` 보정 |
-
-### 파일 구조
-
-- Create: `src/game/data/synergies.ts`  
-  시너지 정의, 파티 카운트 계산, 현재 티어 계산, 전투 스펙 보정 함수를 담당한다.
-- Modify: `src/game/systems/MercManager.ts`  
-  플레이어와 고용 용병이 공격/회복할 때 기본 `MERC_COMBAT` 대신 시너지 적용 후 스펙을 사용하게 한다.
-- Modify: `src/game/hud/GameHud.ts`  
-  이미 직업별 `x2`, `x3` 배지를 표시하고 있으므로, 2명 이상일 때 배지 색만 강조한다.
-- Test: `tests/synergies.test.ts`  
-  순수 함수 기준으로 파티 카운트, 티어 판정, 전투 스펙 보정이 맞는지 검증한다.
-
-### Task 1: 시너지 계산 모듈 추가
-
-**Files:**
-- Create: `src/game/data/synergies.ts`
-- Test: `tests/synergies.test.ts`
-
-- [ ] **Step 1: 실패 테스트 작성**
-
-```ts
-import assert from "node:assert/strict";
-import { applySynergyToCombat, countPartyByClass, getSynergyTier } from "../src/game/data/synergies.ts";
-import { MERC_COMBAT } from "../src/game/data/mercs.ts";
-
-assert.deepEqual(countPartyByClass(["sword", "sword", "mage"]), {
-  sword: 2,
-  mage: 1,
-});
-
-assert.equal(getSynergyTier(1), 0);
-assert.equal(getSynergyTier(2), 2);
-assert.equal(getSynergyTier(3), 3);
-assert.equal(getSynergyTier(6), 3);
-
-const sword2 = applySynergyToCombat(MERC_COMBAT.sword, ["sword", "sword"]);
-assert.equal(sword2.aoeRadius, (MERC_COMBAT.sword.aoeRadius ?? 0) + 15);
-
-const sword3 = applySynergyToCombat(MERC_COMBAT.sword, ["sword", "sword", "sword"]);
-assert.equal(sword3.aoeRadius, (MERC_COMBAT.sword.aoeRadius ?? 0) + 35);
-assert.equal(sword3.atk, Math.round(MERC_COMBAT.sword.atk * 1.1));
-
-const bow3 = applySynergyToCombat(MERC_COMBAT.bow, ["bow", "bow", "bow"]);
-assert.equal(bow3.range, MERC_COMBAT.bow.range + 40);
-assert.equal(bow3.cooldownMs, Math.round(MERC_COMBAT.bow.cooldownMs / 1.3));
-```
-
-- [ ] **Step 2: 실패 확인**
-
-Run:
-
-```bash
-node --experimental-strip-types tests/synergies.test.ts
-```
-
-Expected: `Cannot find module .../src/game/data/synergies.ts`
-
-- [ ] **Step 3: 최소 구현 작성**
-
-```ts
-import type { MercCombat } from "./mercs";
-
-export type SynergyTier = 0 | 2 | 3;
-
-type SynergyBonus = {
-  atkRatio?: number;
-  attackSpeedRatio?: number;
-  rangeBonus?: number;
-  aoeRadiusBonus?: number;
-  healBonus?: number;
-};
-
-type SynergyDef = {
-  label: string;
-  tiers: Record<2 | 3, SynergyBonus>;
-};
-
-export const SYNERGY_DEFS: Record<string, SynergyDef> = {
-  sword: {
-    label: "검사",
-    tiers: {
-      2: { aoeRadiusBonus: 15 },
-      3: { aoeRadiusBonus: 35, atkRatio: 0.1 },
-    },
-  },
-  bow: {
-    label: "궁수",
-    tiers: {
-      2: { attackSpeedRatio: 0.15 },
-      3: { attackSpeedRatio: 0.3, rangeBonus: 40 },
-    },
-  },
-  mage: {
-    label: "마법사",
-    tiers: {
-      2: { aoeRadiusBonus: 20 },
-      3: { aoeRadiusBonus: 40, atkRatio: 0.1 },
-    },
-  },
-  cleric: {
-    label: "성직자",
-    tiers: {
-      2: { healBonus: 3 },
-      3: { healBonus: 8, attackSpeedRatio: 0.15 },
-    },
-  },
-};
-
-export function countPartyByClass(party: string[]): Record<string, number> {
-  return party.reduce<Record<string, number>>((counts, id) => {
-    if (!SYNERGY_DEFS[id]) return counts;
-    counts[id] = (counts[id] ?? 0) + 1;
-    return counts;
-  }, {});
-}
-
-export function getSynergyTier(count: number): SynergyTier {
-  if (count >= 3) return 3;
-  if (count >= 2) return 2;
-  return 0;
-}
-
-export function applySynergyToCombat(base: MercCombat, party: string[]): MercCombat {
-  const tier = getSynergyTier(countPartyByClass(party)[base.id] ?? 0);
-  if (tier === 0) return { ...base };
-
-  const bonus = SYNERGY_DEFS[base.id]?.tiers[tier];
-  if (!bonus) return { ...base };
-
-  return {
-    ...base,
-    atk: Math.max(1, Math.round(base.atk * (1 + (bonus.atkRatio ?? 0)))),
-    range: base.range + (bonus.rangeBonus ?? 0),
-    cooldownMs: Math.max(1, Math.round(base.cooldownMs / (1 + (bonus.attackSpeedRatio ?? 0)))),
-    aoeRadius:
-      base.aoeRadius === undefined && !bonus.aoeRadiusBonus
-        ? base.aoeRadius
-        : (base.aoeRadius ?? 0) + (bonus.aoeRadiusBonus ?? 0),
-    heal: base.heal === undefined ? base.heal : base.heal + (bonus.healBonus ?? 0),
-  };
-}
-```
-
-- [ ] **Step 4: 테스트 통과 확인**
-
-Run:
-
-```bash
-node --experimental-strip-types tests/synergies.test.ts
-```
-
-Expected: 종료 코드 `0`
-
-### Task 2: 전투 로직에 시너지 적용
-
-**Files:**
-- Modify: `src/game/systems/MercManager.ts`
-
-- [ ] **Step 1: 적용 지점 확인**
-
-현재 구조:
-
-- 플레이어 본체 스펙: `syncParty()`에서 `MERC_COMBAT[party[0]]`를 `playerCombat`에 저장
-- 고용 용병 스펙: `Mercenary.combat`이 생성 시점의 `MERC_COMBAT[id]`를 저장
-- 실제 피해/쿨다운 계산: `damageFor(combat)`, `cooldownFor(combat)`에서 처리
-
-따라서 기존 `Mercenary.combat`을 직접 바꾸지 말고, `MercManager`가 공격 직전에 `applySynergyToCombat(base, state.party)`를 호출한다.
-
-- [ ] **Step 2: import 추가**
-
-```ts
-import { applySynergyToCombat } from "../data/synergies";
-```
-
-- [ ] **Step 3: 헬퍼 추가**
-
-```ts
-private combatFor(id: string): MercCombat | null {
-  const base = MERC_COMBAT[id];
-  return base ? applySynergyToCombat(base, this.state.party) : null;
-}
-```
-
-- [ ] **Step 4: 플레이어 스펙 갱신 변경**
-
-```ts
-private syncParty(party: string[]): void {
-  this.playerCombat = party.length > 0 ? this.combatFor(party[0]) : null;
-
-  const wanted = Math.max(0, party.length - 1);
-  while (this.mercs.length < wanted) {
-    const id = party[this.mercs.length + 1];
-    const merc = new Mercenary(this.scene, id);
-    const player = this.getPlayer();
-    if (player) merc.setPosition(player.x, player.y);
-    this.mercs.push(merc);
-  }
-}
-```
-
-- [ ] **Step 5: 고용 용병 공격 시점에 적용**
-
-```ts
-private runCombat(merc: Mercenary): void {
-  const combat = this.combatFor(merc.mercId);
-  if (!combat) return;
-
-  if (combat.role === "heal") {
-    if (merc.ready) {
-      merc.resetCooldown(this.cooldownFor(combat));
-      merc.playAttackCue();
-      this.scheduleHeal(combat.heal ?? 0);
-    }
-    return;
-  }
-
-  const center = this.bodyCenter(merc);
-  const target = this.nearestEnemy(center.x, center.y, combat.range);
-  if (!target) return;
-
-  merc.faceTo(target.x);
-  if (!merc.ready) return;
-  merc.resetCooldown(this.cooldownFor(combat));
-  merc.playAttackCue();
-  this.performAttack(combat, merc.x, merc.y, target);
-}
-```
-
-- [ ] **Step 6: 빌드 확인**
-
-Run:
-
-```bash
-npm run build
-```
-
-Expected: TypeScript 오류 없이 Vite build 완료
-
-### Task 3: HUD에 최소 피드백 추가
-
-**Files:**
-- Modify: `src/game/hud/GameHud.ts`
-
-- [ ] **Step 1: 현재 배지 재사용**
-
-이미 `syncParty()`에서 직업별 개수를 세고 `x2`, `x3` 배지를 표시한다. 1차 구현은 새 UI를 만들지 않고 배지 색으로만 시너지 활성화를 보여준다.
-
-- [ ] **Step 2: 배지 색상 규칙 적용**
-
-`slot.badgeText.setText(...)` 아래에 다음 규칙을 추가한다.
-
-```ts
-if (count >= 3) {
-  slot.badge.setFillStyle(0xffd54a, 1);
-  slot.badgeText.setColor("#1b1024");
-} else if (count >= 2) {
-  slot.badge.setFillStyle(0x6effe0, 1);
-  slot.badgeText.setColor("#1b1024");
-} else {
-  slot.badge.setFillStyle(0xc41e1e, 1);
-  slot.badgeText.setColor("#fff4d6");
-}
-```
-
-- [ ] **Step 3: 표시 확인**
-
-Run:
-
-```bash
-npm run build
-```
-
-Expected: build 통과. 게임에서 같은 직업 2명 이상일 때 하단 용병 슬롯 배지 색이 바뀐다.
-
-### Task 4: 최종 검증
-
-**Files:**
-- Verify only
-
-- [ ] **Step 1: 순수 함수 테스트**
-
-Run:
-
-```bash
-node --experimental-strip-types tests/synergies.test.ts
-```
-
-Expected: 종료 코드 `0`
-
-- [ ] **Step 2: 린트**
-
-Run:
-
-```bash
-npm run lint
-```
-
-Expected: ESLint 오류 없음
-
-- [ ] **Step 3: 빌드**
-
-Run:
-
-```bash
-npm run build
-```
-
-Expected: TypeScript 오류 없음. Vite bundle 경고는 기존 대용량 번들 경고라 실패로 보지 않는다.
-
-- [ ] **Step 4: 수동 플레이 체크**
-
-1. 전사 시작 후 전사 1명 고용 → 전사 `2명` 시너지로 스플래시 반경 증가 체감 확인.
-2. 전사 2명을 추가 고용해 전사 `3명` 이상 → 스플래시 반경과 공격력 증가 확인.
-3. 궁수 3명 → 공격 주기가 짧아지고 사거리 증가 확인.
-4. 마법사 3명 → 폭발 반경 증가 확인.
-5. 성직자 3명 → 회복량 증가와 회복 주기 단축 확인.
-
-### 구현 시 주의점
-
-- `party[0]`인 플레이어 직업도 반드시 카운트에 포함한다.
-- 3명 이상은 3티어만 적용한다. 4명 이상 추가 중첩 금지.
-- `MERC_COMBAT` 원본 객체를 직접 수정하지 않는다. 매 공격 시점에 보정된 복사본을 만들어 사용한다.
-- `tactics`, `haste` 같은 기존 전역 강화는 유지한다. 시너지 보정 후 `damageFor()`와 `cooldownFor()`에서 기존 전역 배율이 한 번 더 적용되게 둔다.
-- 혼합 시너지, 카드 확률 보정, 카드 설명 UI는 이번 범위에서 제외한다.
