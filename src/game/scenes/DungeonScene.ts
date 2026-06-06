@@ -17,8 +17,6 @@ import {
   WORLD_BOUNDARY,
 } from "../config";
 import { GameHud } from "../hud/GameHud";
-import { PauseMenu } from "../hud/PauseMenu";
-import { GameOverMenu } from "../hud/GameOverMenu";
 import { TutorialGuide } from "../hud/TutorialGuide";
 import {
   GAME_EVENT,
@@ -76,13 +74,10 @@ export class DungeonScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Image;
   private keys?: WasdKeys;
   private hud?: GameHud;
-  private pauseMenu?: PauseMenu;
-  private overMenu?: GameOverMenu;
   private tutorial?: TutorialGuide;
   private paused = false;
   private gameOver = false;
   private waitingForUpgrade = false;
-  private upgradeOverlay?: Phaser.GameObjects.Container;
   private upgradeSelectedHandler?: EventListener;
   private devWaveSecHandler?: EventListener;
   private resumeRequestHandler?: EventListener;
@@ -155,19 +150,6 @@ export class DungeonScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
-    this.pauseMenu = new PauseMenu(
-      this,
-      () => this.setPaused(false),
-      () => window.dispatchEvent(new CustomEvent(GAME_EXIT_EVENT)),
-    );
-    this.pauseMenu.build();
-
-    this.overMenu = new GameOverMenu(
-      this,
-      () => this.scene.restart(),
-      () => window.dispatchEvent(new CustomEvent(GAME_EXIT_EVENT)),
-    );
-    this.overMenu.build();
     this.state.on(GAME_EVENT.over, this.onGameOver, this);
     this.state.on(GAME_EVENT.upgradeRequest, this.onUpgradeRequest, this);
     this.state.on(GAME_EVENT.bossStart, this.onBossStart, this);
@@ -226,7 +208,6 @@ export class DungeonScene extends Phaser.Scene {
     if (this.gameOver) return;
     this.gameOver = true;
     this.waitingForUpgrade = false;
-    this.hideUpgradeWait();
     this.clearBossVisuals();
     this.hud?.hideBossBar();
     this.bossHud = null;
@@ -236,7 +217,6 @@ export class DungeonScene extends Phaser.Scene {
     if (!payload.victory) this.playPlayerDeath();
     else this.sfx.play("victory");
     this.physics.world.pause();
-    this.pauseMenu?.hide();
 
     const result = {
       victory: payload.victory,
@@ -249,7 +229,6 @@ export class DungeonScene extends Phaser.Scene {
     emitPauseState(window, false);
     emitResultState(window, result);
     this.emitReactHud();
-    this.overMenu?.show(result);
   }
 
   private togglePause(): void {
@@ -266,11 +245,9 @@ export class DungeonScene extends Phaser.Scene {
       const body = this.player.body as Phaser.Physics.Arcade.Body;
       body.setVelocity(0, 0);
       this.physics.world.pause();
-      this.pauseMenu?.show();
     } else {
       this.sfx.play("unpause");
       this.physics.world.resume();
-      this.pauseMenu?.hide();
     }
     emitPauseState(window, paused);
   }
@@ -375,7 +352,6 @@ export class DungeonScene extends Phaser.Scene {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(0, 0);
     this.physics.world.pause();
-    this.showUpgradeWait(payload);
     this.sfx.play("uiConfirm");
 
     window.dispatchEvent(
@@ -393,7 +369,6 @@ export class DungeonScene extends Phaser.Scene {
     if (!this.waitingForUpgrade || this.gameOver) return;
     if (upgradeId) this.applyUpgrade(upgradeId);
     this.waitingForUpgrade = false;
-    this.hideUpgradeWait();
     this.state.completeUpgrade();
     this.physics.world.resume();
   }
@@ -545,44 +520,6 @@ export class DungeonScene extends Phaser.Scene {
       ],
       onComplete: () => banner.destroy(true),
     });
-  }
-
-  private showUpgradeWait(payload: UpgradeRequestPayload): void {
-    this.hideUpgradeWait();
-
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2;
-    const overlay = this.add.container(0, 0).setScrollFactor(0).setDepth(95);
-    const scrim = this.add
-      .rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x05030a, 0.66)
-      .setInteractive();
-    const panel = this.add
-      .rectangle(cx, cy, 460, 190, 0x0a0610, 0.98)
-      .setStrokeStyle(2, 0xffd54a, 0.82);
-    const title = this.add
-      .text(cx, cy - 38, `웨이브 ${payload.completedWave} 종료`, {
-        fontFamily: "Galmuri11, monospace",
-        fontSize: "30px",
-        color: "#ffd58a",
-      })
-      .setOrigin(0.5);
-    const body = this.add
-      .text(cx, cy + 22, `업그레이드 선택 대기\n다음 웨이브 ${payload.nextWave} / 20`, {
-        fontFamily: "Galmuri11, monospace",
-        fontSize: "17px",
-        color: "#ece2c8",
-        align: "center",
-        lineSpacing: 8,
-      })
-      .setOrigin(0.5);
-
-    overlay.add([scrim, panel, title, body]);
-    this.upgradeOverlay = overlay;
-  }
-
-  private hideUpgradeWait(): void {
-    this.upgradeOverlay?.destroy(true);
-    this.upgradeOverlay = undefined;
   }
 
   private cleanupScene(): void {
