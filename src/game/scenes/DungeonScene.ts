@@ -330,7 +330,11 @@ export class DungeonScene extends Phaser.Scene {
 
     window.dispatchEvent(
       new CustomEvent(UPGRADE_REQUEST_EVENT, {
-        detail: { ...payload, mercFull: this.state.mercFull },
+        detail: {
+          ...payload,
+          blockedHireIds: this.state.blockedHireIds,
+          mercFull: this.state.mercFull,
+        },
       }),
     );
   }
@@ -796,7 +800,7 @@ export class DungeonScene extends Phaser.Scene {
 
     // 파티 0번 = 플레이어 자신(선택한 직업). 추가 용병은 카드로 고용된다.
     const classId = this.registry.get("classId") as string | null;
-    this.state.addMerc(classId ?? "sword");
+    this.state.addPlayerClass(classId ?? "sword");
   }
 
   private setupInput(): void {

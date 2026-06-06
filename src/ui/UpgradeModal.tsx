@@ -16,7 +16,7 @@ export function UpgradeModal() {
   useEffect(() => {
     const onRequest = (event: WindowEventMap["game:upgrade-request"]) => {
       setRequest(event.detail);
-      setChoices(rollUpgradeChoices(3, { excludeHire: event.detail.mercFull }));
+      setChoices(rollUpgradeChoices(5, { excludeHireIds: event.detail.blockedHireIds }));
     };
 
     window.addEventListener("game:upgrade-request", onRequest);
@@ -53,12 +53,12 @@ export function UpgradeModal() {
           </p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-5">
           {choices.map((upgrade) => (
             <button
               key={upgrade.id}
               type="button"
-              className="group flex min-h-48 flex-col border-2 border-bone-white/25 bg-dungeon-stone/90 p-4 text-left transition hover:-translate-y-1 hover:border-torch-core hover:shadow-[0_0_24px_rgba(255,122,58,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-torch-core"
+              className="group flex min-h-40 flex-col border-2 border-bone-white/25 bg-dungeon-stone/90 p-3 text-left transition hover:-translate-y-1 hover:border-torch-core hover:shadow-[0_0_24px_rgba(255,122,58,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-torch-core"
               onClick={() => selectUpgrade(upgrade)}
             >
               <div className="text-lg text-bone-white group-hover:text-torch-core">

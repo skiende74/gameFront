@@ -1,6 +1,13 @@
 import Phaser from "phaser";
 import { HUD, MAX_HIRED_MERCS } from "../config";
 import { bossIdForWave, isBossWave, type EnemyId } from "../data/enemies";
+import { MERC_IDS } from "../data/mercs";
+import {
+  addUnitWithMerge,
+  canAddOrMergeUnit,
+  createPartyUnit,
+  type PartyUnit,
+} from "./partyUnits";
 
 /** GameState 가 발행하는 이벤트 키. HUD·시스템이 구독해 화면/로직을 갱신한다. */
 export const GAME_EVENT = {
@@ -10,6 +17,7 @@ export const GAME_EVENT = {
   party: "state-party",
   kills: "state-kills",
   score: "state-score",
+  unitRankUp: "state-unit-rank-up",
   upgradeRequest: "state-upgrade-request",
   bossStart: "state-boss-start",
   bossEnd: "state-boss-end",
@@ -20,6 +28,7 @@ export type GameOverPayload = { victory: boolean };
 export type UpgradeRequestPayload = { completedWave: number; nextWave: number };
 export type BossStartPayload = { wave: number; bossId: EnemyId };
 export type BossEndPayload = { wave: number };
+export type UnitRankUpPayload = PartyUnit;
 export type GameStateOptions = { waveSec?: number };
 
 /**
@@ -38,7 +47,7 @@ export class GameState extends Phaser.Events.EventEmitter {
   mercenaryDamageMultiplier = 1;
   mercenaryAttackSpeedMultiplier = 1;
   playerSpeedMultiplier = 1;
-  party: string[] = [];
+  party: PartyUnit[] = [];
   over = false;
   upgradePending = false;
   /** 현재 웨이브 진행 시간(초). 웨이브가 바뀔 때마다 0으로 초기화된다. */
@@ -88,19 +97,38 @@ export class GameState extends Phaser.Events.EventEmitter {
     this.emit(GAME_EVENT.score, this.score);
   }
 
-  addMerc(id: string): void {
-    this.party.push(id);
+  addPlayerClass(id: string): void {
+    if (this.party.some((unit) => unit.isPlayer)) return;
+    this.party = [createPartyUnit(id, { isPlayer: true })];
     this.emit(GAME_EVENT.party, this.party);
+  }
+
+  addMerc(id: string): void {
+    if (!this.canAddMerc(id)) return;
+    const before = new Map(this.party.map((unit) => [unit.uid, unit.rank]));
+    const next = addUnitWithMerge(this.party, id);
+    const upgraded = next.find((unit) => (before.get(unit.uid) ?? 0) < unit.rank);
+    this.party = next;
+    this.emit(GAME_EVENT.party, this.party);
+    if (upgraded) this.emit(GAME_EVENT.unitRankUp, upgraded satisfies UnitRankUpPayload);
   }
 
   /** 고용된 용병 수(파티 0번 = 플레이어 본체 제외). */
   get hiredMercCount(): number {
-    return Math.max(0, this.party.length - 1);
+    return this.party.filter((unit) => !unit.isPlayer).length;
   }
 
   /** 용병이 최대치까지 찼는지. 보상 카드에서 고용 카드를 숨길 때 사용. */
   get mercFull(): boolean {
-    return this.hiredMercCount >= MAX_HIRED_MERCS;
+    return MERC_IDS.every((id) => !this.canAddMerc(id));
+  }
+
+  get blockedHireIds(): string[] {
+    return MERC_IDS.filter((id) => !this.canAddMerc(id));
+  }
+
+  canAddMerc(id: string): boolean {
+    return canAddOrMergeUnit(this.party, id, MAX_HIRED_MERCS);
   }
 
   damagePlayer(amount: number): void {

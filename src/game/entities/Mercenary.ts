@@ -8,6 +8,8 @@ import {
   mercWalkTex,
   type MercCombat,
 } from "../data/mercs";
+import { applyRankToCombat } from "../data/unitRanks";
+import type { PartyUnit } from "../state/partyUnits";
 
 const MERC_DEPTH = 18;
 const FOLLOW_LERP = 0.24;
@@ -15,16 +17,19 @@ const MOVE_EPSILON = 3;
 
 /** 플레이어를 따라다니며 자동 전투하는 용병 1기(시각/이동 담당). 전투 판정은 MercManager 가 조율. */
 export class Mercenary extends Phaser.GameObjects.Sprite {
+  readonly unit: PartyUnit;
   readonly mercId: string;
   readonly combat: MercCombat;
   private cooldownLeft = 0;
   private moving = false;
   private attacking = false;
 
-  constructor(scene: Phaser.Scene, id: string) {
+  constructor(scene: Phaser.Scene, unit: PartyUnit) {
+    const id = unit.id;
     super(scene, 0, 0, mercIdleTex(id), 0);
+    this.unit = unit;
     this.mercId = id;
-    this.combat = MERC_COMBAT[id];
+    this.combat = applyRankToCombat(MERC_COMBAT[id], unit.rank);
 
     scene.add.existing(this);
     this.setScale(this.combat.scale);

@@ -82,10 +82,11 @@ export function getUpgrade(id: string | undefined): UpgradeDef | undefined {
 
 export function rollUpgradeChoices(
   count = 3,
-  opts?: { excludeHire?: boolean },
+  opts?: { excludeHire?: boolean; excludeHireIds?: string[] },
 ): UpgradeDef[] {
+  const excludedHireIds = new Set(opts?.excludeHireIds?.map((id) => `hire-${id}`));
   const pool = opts?.excludeHire
     ? UPGRADE_LIST.filter((u) => !u.id.startsWith("hire-"))
-    : [...UPGRADE_LIST];
+    : UPGRADE_LIST.filter((u) => !excludedHireIds.has(u.id));
   return [...pool].sort(() => Math.random() - 0.5).slice(0, count);
 }

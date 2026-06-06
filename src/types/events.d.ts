@@ -5,6 +5,7 @@ declare global {
     "game:upgrade-request": CustomEvent<{
       completedWave: number;
       nextWave: number;
+      blockedHireIds?: string[];
       mercFull?: boolean;
     }>;
     "game:upgrade-selected": CustomEvent<{ upgradeId?: string }>;

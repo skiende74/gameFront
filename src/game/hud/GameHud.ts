@@ -1,6 +1,9 @@
 import Phaser from "phaser";
 import { GAME_HEIGHT, GAME_WIDTH, HUD, MERC_HUD } from "../config";
+import { MERC_COMBAT } from "../data/mercs";
+import { RANK_BADGE, applyRankToCombat } from "../data/unitRanks";
 import { GAME_EVENT, type GameState } from "../state/GameState";
+import type { PartyUnit } from "../state/partyUnits";
 import { SYNERGY_DEFS, activeTier, nextTier } from "../data/synergies";
 
 const FONT = "Galmuri11, monospace";
@@ -40,6 +43,9 @@ export class GameHud {
 
   private mercBar!: Phaser.GameObjects.Container;
   private readonly slots: MercSlot[] = [];
+  private mercTooltip!: Phaser.GameObjects.Container;
+  private mercTooltipBg!: Phaser.GameObjects.Graphics;
+  private mercTooltipText!: Phaser.GameObjects.Text;
 
   private synergyPanel!: Phaser.GameObjects.Container;
   private readonly synergyGeom = {
@@ -86,6 +92,7 @@ export class GameHud {
     this.buildSynergyPanel();
     this.buildBossBar();
     this.buildControlsHint();
+    this.buildMercTooltip();
 
     // GameState 변경 이벤트만 구독해 화면을 갱신한다(상태와 표현의 분리).
     this.state.on(GAME_EVENT.time, this.onTime, this);
@@ -145,20 +152,21 @@ export class GameHud {
   }
 
   /** GameState.party(중복 포함 배열)를 슬롯/수량 배지로 동기화한다. */
-  private syncParty(party: string[]): void {
+  private syncParty(party: PartyUnit[]): void {
     const counts = new Map<string, number>();
-    for (const id of party) {
-      if (MERC_HUD[id]) counts.set(id, (counts.get(id) ?? 0) + 1);
-    }
-    for (const [id, count] of counts) {
-      let slot = this.slots.find((s) => s.id === id);
-      if (!slot) {
-        slot = this.createSlot(id);
-        this.slots.push(slot);
-      }
-      slot.count = count;
-      slot.badgeText.setText(`x${count}`);
-      slot.badge.setVisible(count > 1);
+    this.hideMercTooltip();
+    for (const slot of this.slots) slot.container.destroy();
+    this.slots.length = 0;
+
+    for (const unit of party) {
+      if (!MERC_HUD[unit.id]) continue;
+      counts.set(unit.id, (counts.get(unit.id) ?? 0) + unit.rank);
+      const slot = this.createSlot(unit.id);
+      slot.count = unit.rank;
+      slot.badgeText.setText(RANK_BADGE[unit.rank]);
+      slot.badge.setVisible(unit.rank > 1);
+      this.attachTooltip(slot, unit);
+      this.slots.push(slot);
     }
     this.layoutMercBar();
     this.refreshSynergy(counts);
@@ -338,6 +346,12 @@ export class GameHud {
     const info = MERC_HUD[id];
     const box = HUD.slotBox;
     const container = this.scene.add.container(0, 0).setScrollFactor(0);
+    container
+      .setSize(box, box + 22)
+      .setInteractive(
+        new Phaser.Geom.Rectangle(-box / 2, -box / 2, box, box + 22),
+        Phaser.Geom.Rectangle.Contains,
+      );
 
     const bg = this.scene.add.graphics();
     bg.fillStyle(COLOR.panelFill, 0.9);
@@ -394,6 +408,62 @@ export class GameHud {
 
     this.mercBar.add(container);
     return { id, container, badge, badgeText, count: 1 };
+  }
+
+  private buildMercTooltip(): void {
+    this.mercTooltip = this.scene.add.container(0, 0).setScrollFactor(0).setVisible(false);
+    this.mercTooltipBg = this.scene.add.graphics().setScrollFactor(0);
+    this.mercTooltipText = this.scene.add
+      .text(10, 8, "", {
+        fontFamily: FONT,
+        fontSize: "12px",
+        color: COLOR.bone,
+        lineSpacing: 4,
+      })
+      .setScrollFactor(0);
+    this.mercTooltip.add([this.mercTooltipBg, this.mercTooltipText]);
+    this.layer.add(this.mercTooltip);
+  }
+
+  private attachTooltip(slot: MercSlot, unit: PartyUnit): void {
+    slot.container.on("pointerover", () => this.showMercTooltip(slot, unit));
+    slot.container.on("pointermove", () => this.showMercTooltip(slot, unit));
+    slot.container.on("pointerout", () => this.hideMercTooltip());
+  }
+
+  private showMercTooltip(slot: MercSlot, unit: PartyUnit): void {
+    const text = this.tooltipTextFor(unit);
+    this.mercTooltipText.setText(text);
+
+    const w = Math.max(164, this.mercTooltipText.width + 20);
+    const h = this.mercTooltipText.height + 16;
+    const x = Phaser.Math.Clamp(slot.container.x - w / 2, 12, GAME_WIDTH - w - 12);
+    const y = slot.container.y - HUD.slotBox / 2 - h - 12;
+
+    this.mercTooltipBg.clear();
+    this.mercTooltipBg.fillStyle(COLOR.panelFill, 0.94);
+    this.mercTooltipBg.fillRoundedRect(0, 0, w, h, 8);
+    this.mercTooltipBg.lineStyle(2, MERC_HUD[unit.id].color, 0.85);
+    this.mercTooltipBg.strokeRoundedRect(0, 0, w, h, 8);
+    this.mercTooltip.setPosition(x, y).setVisible(true);
+  }
+
+  private hideMercTooltip(): void {
+    if (this.mercTooltip) this.mercTooltip.setVisible(false);
+  }
+
+  private tooltipTextFor(unit: PartyUnit): string {
+    const info = MERC_HUD[unit.id];
+    const combat = applyRankToCombat(MERC_COMBAT[unit.id], unit.rank);
+    const power = combat.role === "heal" ? `회복 ${combat.heal ?? 0}` : `공격 ${combat.atk}`;
+    const lines = [
+      `${info.label} ${unit.rank}성 (${RANK_BADGE[unit.rank]})`,
+      power,
+      `쿨타임 ${(combat.cooldownMs / 1000).toFixed(2)}s`,
+    ];
+    if (combat.range > 0) lines.push(`사거리 ${combat.range}px`);
+    if (combat.aoeRadius) lines.push(`폭발반경 ${combat.aoeRadius}px`);
+    return lines.join("\n");
   }
 
   private buildSynergyPanel(): void {

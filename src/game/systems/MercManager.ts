@@ -3,7 +3,9 @@ import { EFFECT_ANIM, TEX } from "../config";
 import { Mercenary } from "../entities/Mercenary";
 import { Enemy } from "../entities/Enemy";
 import { MERC_COMBAT, type MercCombat } from "../data/mercs";
-import { GAME_EVENT, type GameState } from "../state/GameState";
+import { RANK_BADGE, applyRankToCombat } from "../data/unitRanks";
+import { GAME_EVENT, type GameState, type UnitRankUpPayload } from "../state/GameState";
+import type { PartyUnit } from "../state/partyUnits";
 import type { ProjectileManager } from "./ProjectileManager";
 import type { SfxManager } from "./SfxManager";
 import { getSplashTargets } from "./meleeSplash";
@@ -49,21 +51,75 @@ export class MercManager {
 
     this.syncParty(state.party);
     state.on(GAME_EVENT.party, this.syncParty, this);
+    state.on(GAME_EVENT.unitRankUp, this.onUnitRankUp, this);
   }
 
-  private syncParty(party: string[]): void {
+  private syncParty(party: PartyUnit[]): void {
     // 0번은 플레이어 본인의 전투 스펙
-    this.playerCombat = party.length > 0 ? MERC_COMBAT[party[0]] ?? null : null;
+    const playerUnit = party.find((unit) => unit.isPlayer);
+    this.playerCombat = playerUnit ? this.combatFor(playerUnit) : null;
 
     // 1번 이후만 추종 용병 스프라이트로 생성
-    const wanted = Math.max(0, party.length - 1);
-    while (this.mercs.length < wanted) {
-      const id = party[this.mercs.length + 1];
-      const merc = new Mercenary(this.scene, id);
+    this.mercs.splice(0).forEach((merc) => merc.destroy());
+    for (const unit of party.filter((item) => !item.isPlayer)) {
+      const merc = new Mercenary(this.scene, unit);
       const player = this.getPlayer();
       if (player) merc.setPosition(player.x, player.y);
       this.mercs.push(merc);
     }
+  }
+
+  private combatFor(unit: PartyUnit): MercCombat | null {
+    const base = MERC_COMBAT[unit.id];
+    return base ? applyRankToCombat(base, unit.rank) : null;
+  }
+
+  private onUnitRankUp(unit: UnitRankUpPayload): void {
+    const target = unit.isPlayer
+      ? this.getPlayer()
+      : this.mercs.find((merc) => merc.unit.uid === unit.uid);
+    if (!target) return;
+    this.playRankUpFx(target, RANK_BADGE[unit.rank]);
+  }
+
+  private playRankUpFx(target: Phaser.GameObjects.Sprite, label: string): void {
+    target.setTint(0xffffff);
+    this.scene.time.delayedCall(120, () => target.clearTint());
+
+    const depth = target.depth + 3;
+    const burst = this.scene.add
+      .circle(target.x, target.y - 30, 28, 0xffffff, 0.55)
+      .setDepth(depth)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const text = this.scene.add
+      .text(target.x, target.y - 92, label, {
+        fontFamily: "Galmuri11, monospace",
+        fontSize: "26px",
+        color: "#ffffff",
+        stroke: "#ffd58a",
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
+      .setDepth(depth + 1)
+      .setShadow(0, 0, "#ffffff", 12, false, true);
+
+    this.scene.tweens.add({
+      targets: burst,
+      scale: { from: 0.5, to: 2.1 },
+      alpha: { from: 0.55, to: 0 },
+      duration: 520,
+      ease: "Quad.out",
+      onComplete: () => burst.destroy(),
+    });
+    this.scene.tweens.add({
+      targets: text,
+      y: text.y - 34,
+      alpha: { from: 1, to: 0 },
+      scale: { from: 0.9, to: 1.2 },
+      duration: 900,
+      ease: "Quad.out",
+      onComplete: () => text.destroy(),
+    });
   }
 
   update(deltaMs: number): void {

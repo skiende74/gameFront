@@ -54,6 +54,8 @@ export const MERC_COMBAT: Record<string, MercCombat> = {
   cleric: { id: "cleric", role: "heal", atk: 0, range: 0, cooldownMs: 3000, heal: 5, scale: 3, feetRatio: 0.58 },
 };
 
+export const MERC_IDS = Object.keys(MERC_COMBAT);
+
 export const mercWalkTex = (id: string): string => `tex-mercwalk-${id}`;
 export const mercAttackTex = (id: string): string => `tex-mercattack-${id}`;
 /** idle 텍스처는 HUD 아이콘과 동일 시트를 재사용한다. */
