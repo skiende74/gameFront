@@ -22,6 +22,8 @@ import {
   ENEMY_FRAME,
   ENEMY_IDS,
   ENEMY_DEFS,
+  enemyEffectSheetPath,
+  enemyEffectTex,
   enemySheetPath,
   enemyTex,
 } from "../data/enemies";
@@ -83,9 +85,10 @@ export class PreloadScene extends Phaser.Scene {
           enemyFrame,
         );
       }
-      // 공격 모션은 보스만 사용한다.
+      // 공격 모션 + 공격 이펙트는 보스만 사용한다.
       if (def.boss) {
         this.load.spritesheet(enemyTex(id, "attack"), enemySheetPath(folder, "attack"), enemyFrame);
+        this.load.spritesheet(enemyEffectTex(id), enemyEffectSheetPath(folder), enemyFrame);
       }
     }
 

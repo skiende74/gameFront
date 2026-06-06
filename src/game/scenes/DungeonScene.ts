@@ -28,7 +28,7 @@ import {
   type UpgradeRequestPayload,
 } from "../state/GameState";
 import { Enemy, ensureEnemyAnimations } from "../entities/Enemy";
-import { enemyAnimKey } from "../data/enemies";
+import { enemyAnimKey, enemyEffectAnimKey, enemyEffectTex } from "../data/enemies";
 import { ensureMercAnimations } from "../entities/Mercenary";
 import { WaveManager } from "../systems/WaveManager";
 import { ProjectileManager } from "../systems/ProjectileManager";
@@ -374,12 +374,29 @@ export class DungeonScene extends Phaser.Scene {
     const hasAnim = this.anims.exists(attackKey);
     if (hasAnim) {
       boss.play(attackKey, true);
+      this.playBossAttackEffect(boss);
       boss.once(`animationcomplete-${attackKey}`, () => this.endBossAttack(boss));
     } else {
       this.time.delayedCall(BOSS_ATTACK_WINDUP_MS + 220, () => this.endBossAttack(boss));
     }
 
     this.time.delayedCall(BOSS_ATTACK_WINDUP_MS, () => this.bossStrike(boss));
+  }
+
+  /** 보스 공격 모션에 맞춰 보스 위치에 전용 공격 이펙트(Split Effects)를 겹쳐 재생한다. */
+  private playBossAttackEffect(boss: Enemy): void {
+    const fxTex = enemyEffectTex(boss.def.id);
+    const fxKey = enemyEffectAnimKey(boss.def.id);
+    if (!this.textures.exists(fxTex) || !this.anims.exists(fxKey)) return;
+
+    const fx = this.add
+      .sprite(boss.x, boss.y, fxTex, 0)
+      .setScale(boss.def.scale)
+      .setOrigin(0.5, boss.def.feetRatio)
+      .setFlipX(boss.flipX)
+      .setDepth(boss.depth + 1);
+    fx.play(fxKey, true);
+    fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => fx.destroy());
   }
 
   /** 보스 타격 판정: 여전히 사거리 안이면 피해 + 임팩트 연출. */
@@ -391,7 +408,6 @@ export class DungeonScene extends Phaser.Scene {
     this.state.damagePlayer(boss.damage);
     this.sfx.play("playerHurt");
     if (!this.state.over) this.flashPlayerHurt();
-    this.spawnBossAttackEffect(this.player.x, this.player.y);
     this.cameras.main.shake(170, 0.007);
   }
 
@@ -400,44 +416,6 @@ export class DungeonScene extends Phaser.Scene {
     if (!boss.targetable) return;
     boss.frozen = false;
     boss.play(enemyAnimKey(boss.def.id, "walk"), true);
-  }
-
-  /** 보스 공격이 적중한 자리에 붉은 충격 이펙트(원형 파동 + 베기 호)를 그린다. */
-  private spawnBossAttackEffect(x: number, y: number): void {
-    const ring = this.add
-      .circle(x, y, 18, 0xff3a2a, 0.45)
-      .setDepth(24)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    this.tweens.add({
-      targets: ring,
-      scale: { from: 0.5, to: 2.6 },
-      alpha: { from: 0.55, to: 0 },
-      duration: 320,
-      ease: "Quad.out",
-      onComplete: () => ring.destroy(),
-    });
-
-    const slash = this.add
-      .graphics()
-      .setDepth(25)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setPosition(x, y);
-    const proxy = { t: 0 };
-    this.tweens.add({
-      targets: proxy,
-      t: 1,
-      duration: 220,
-      ease: "Quad.out",
-      onUpdate: () => {
-        const sweep = Phaser.Math.DegToRad(-60 + 120 * proxy.t);
-        slash.clear();
-        slash.lineStyle(6 * (1 - proxy.t) + 2, 0xffd0c0, 0.9 * (1 - proxy.t) + 0.1);
-        slash.beginPath();
-        slash.arc(0, 0, 46, sweep - 0.6, sweep + 0.6, false);
-        slash.strokePath();
-      },
-      onComplete: () => slash.destroy(),
-    });
   }
 
   private onUpgradeRequest(payload: UpgradeRequestPayload): void {

@@ -3,6 +3,8 @@ import {
   ENEMY_FRAME,
   ENEMY_IDS,
   enemyAnimKey,
+  enemyEffectAnimKey,
+  enemyEffectTex,
   enemyTex,
   type EnemyAnimKind,
   type EnemyDef,
@@ -165,6 +167,20 @@ export function ensureEnemyAnimations(scene: Phaser.Scene): void {
         frames: scene.anims.generateFrameNumbers(tex, { start: 0, end: frameCount - 1 }),
         frameRate: kind === "walk" ? 10 : kind === "attack" ? 12 : 8,
         repeat: kind === "idle" || kind === "walk" ? -1 : 0,
+      });
+    }
+
+    // 보스 공격 이펙트(텍스처가 로드된 보스만 생성).
+    const fxTex = enemyEffectTex(id);
+    const fxKey = enemyEffectAnimKey(id);
+    if (scene.textures.exists(fxTex) && !scene.anims.exists(fxKey)) {
+      const source = scene.textures.get(fxTex).getSourceImage() as HTMLImageElement;
+      const frameCount = Math.max(1, Math.floor(source.width / ENEMY_FRAME.width));
+      scene.anims.create({
+        key: fxKey,
+        frames: scene.anims.generateFrameNumbers(fxTex, { start: 0, end: frameCount - 1 }),
+        frameRate: 12,
+        repeat: 0,
       });
     }
   }
