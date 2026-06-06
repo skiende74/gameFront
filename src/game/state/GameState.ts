@@ -98,6 +98,14 @@ export class GameState extends Phaser.Events.EventEmitter {
     this.emit(GAME_EVENT.score, this.score);
   }
 
+  /** 점수를 포인트로 소비한다(카드 새로고침 등). 잔액이 모자라면 false. */
+  spendScore(amount: number): boolean {
+    if (amount <= 0 || this.score < amount) return false;
+    this.score -= amount;
+    this.emit(GAME_EVENT.score, this.score);
+    return true;
+  }
+
   addPlayerClass(id: string): void {
     if (this.party.some((unit) => unit.isPlayer)) return;
     this.party = [createPartyUnit(id, { isPlayer: true })];

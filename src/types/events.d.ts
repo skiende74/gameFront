@@ -7,8 +7,10 @@ declare global {
       nextWave: number;
       blockedHireIds?: string[];
       mercFull?: boolean;
+      score: number;
     }>;
     "game:upgrade-selected": CustomEvent<{ upgradeId?: string }>;
+    "game:upgrade-reroll": CustomEvent<{ cost: number }>;
     "game:dev-wave-sec-change": CustomEvent<{ waveSec: number }>;
   }
 }

@@ -7,16 +7,23 @@ import {
 type UpgradeRequest = {
   completedWave: number;
   nextWave: number;
+  blockedHireIds?: string[];
+  score: number;
 };
+
+const CHOICE_COUNT = 5;
+const REROLL_COST = 100;
 
 export function UpgradeModal() {
   const [request, setRequest] = useState<UpgradeRequest | null>(null);
   const [choices, setChoices] = useState<UpgradeDef[]>([]);
+  const [points, setPoints] = useState(0);
 
   useEffect(() => {
     const onRequest = (event: WindowEventMap["game:upgrade-request"]) => {
       setRequest(event.detail);
-      setChoices(rollUpgradeChoices(5, { excludeHireIds: event.detail.blockedHireIds }));
+      setPoints(event.detail.score ?? 0);
+      setChoices(rollUpgradeChoices(CHOICE_COUNT, { excludeHireIds: event.detail.blockedHireIds }));
     };
 
     window.addEventListener("game:upgrade-request", onRequest);
@@ -31,6 +38,17 @@ export function UpgradeModal() {
     );
     setRequest(null);
     setChoices([]);
+  };
+
+  const canReroll = points >= REROLL_COST;
+
+  const reroll = () => {
+    if (!canReroll) return;
+    setPoints((prev) => prev - REROLL_COST);
+    setChoices(rollUpgradeChoices(CHOICE_COUNT, { excludeHireIds: request.blockedHireIds }));
+    window.dispatchEvent(
+      new CustomEvent("game:upgrade-reroll", { detail: { cost: REROLL_COST } }),
+    );
   };
 
   return (
@@ -72,6 +90,21 @@ export function UpgradeModal() {
               </div>
             </button>
           ))}
+        </div>
+
+        <div className="mt-5 flex items-center justify-between border-t border-bone-white/15 pt-4">
+          <div className="text-sm text-ash-grey">
+            보유 포인트{" "}
+            <span className="font-pixel-en text-base text-torch-core">{points}P</span>
+          </div>
+          <button
+            type="button"
+            disabled={!canReroll}
+            className="border-2 border-torch-core/60 bg-dungeon-stone/90 px-4 py-2 text-sm text-bone-white transition hover:border-torch-core hover:text-torch-core disabled:cursor-not-allowed disabled:border-bone-white/15 disabled:text-ash-grey/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-torch-core"
+            onClick={reroll}
+          >
+            새로고침 <span className="font-pixel-en">({REROLL_COST}P)</span>
+          </button>
         </div>
       </div>
     </div>
