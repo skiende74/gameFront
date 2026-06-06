@@ -17,15 +17,17 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
 }
 
 export function TopHud({ snapshot }: Props) {
-  const hpColor =
-    snapshot.hp.ratio < 0.3 ? "bg-blood-red" : snapshot.hp.ratio < 0.6 ? "bg-torch-core" : "bg-class-bow";
+  const danger = snapshot.hp.ratio < 0.3;
+  const hpColor = danger ? "bg-blood-red" : snapshot.hp.ratio < 0.6 ? "bg-torch-core" : "bg-class-bow";
 
   return (
     <>
-      <Panel className="absolute left-4 top-4 h-14 w-[264px] border-blood-red/55 px-3 py-2">
+      <Panel
+        className={`absolute left-4 top-4 h-14 w-[264px] border-blood-red/55 px-3 py-2 ${danger ? "hp-danger" : ""}`}
+      >
         <div className="flex items-center justify-between text-[13px]">
           <span className="flex items-center gap-1.5">
-            <PixelIcon name="heart" className="h-3 w-3 text-blood-red" />
+            <PixelIcon name="heart" className={`h-3 w-3 text-blood-red ${danger ? "heart-beat" : ""}`} />
             체력
           </span>
           <span className="font-pixel-en text-[10px] text-ash-grey">
