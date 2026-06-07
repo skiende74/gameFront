@@ -1,9 +1,10 @@
 import Phaser from "phaser";
-import { EFFECT_ANIM, MAGIC_PROJECTILE_FRAME, TEX } from "../config";
+import { EFFECT_ANIM, MAGIC_PROJECTILE_ROTATION_OFFSET, TEX } from "../config";
 import { Projectile } from "../entities/Projectile";
 import { Enemy } from "../entities/Enemy";
 import type { GameState } from "../state/GameState";
 import type { SfxManager } from "./SfxManager";
+import { ensureWizardIceProjectileTexture } from "../effects/iceProjectile";
 
 const ARROW_SPEED = 560;
 const MAGIC_SPEED = 380;
@@ -29,6 +30,7 @@ export class ProjectileManager {
     this.state = state;
     this.getEnemies = getEnemies;
     this.sfx = sfx;
+    ensureWizardIceProjectileTexture(scene);
     this.ensureEffectAnimations();
     this.group = scene.physics.add.group({
       classType: Projectile,
@@ -75,7 +77,7 @@ export class ProjectileManager {
     aoeRadius: number,
   ): void {
     const angle = Math.atan2(targetY - y, targetX - x);
-    const p = this.group.get(x, y, TEX.wizardExplosionEffect) as Projectile | null;
+    const p = this.group.get(x, y, TEX.wizardIceProjectile) as Projectile | null;
     if (!p) return;
     this.sfx.play("magicCast");
     p.fire({
@@ -85,12 +87,12 @@ export class ProjectileManager {
       speed: MAGIC_SPEED,
       damage,
       aoe: aoeRadius,
-      texture: TEX.wizardExplosionEffect,
-      frame: MAGIC_PROJECTILE_FRAME,
-      scale: 1.6,
+      texture: TEX.wizardIceProjectile,
+      scale: 2.4,
       tint: 0xffffff,
       maxRange: 400,
       rotateToDir: true,
+      rotationOffset: MAGIC_PROJECTILE_ROTATION_OFFSET,
       bodyRadius: 8,
     });
   }

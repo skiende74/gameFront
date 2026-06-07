@@ -68,6 +68,7 @@ export const TEX = {
   flameParticle: "tex-flame-particle",
   arrow: "tex-arrow",
   wizardExplosionEffect: "tex-wizard-attack01-effect",
+  wizardIceProjectile: "tex-wizard-ice-projectile",
   priestHealEffect: "tex-priest-heal-effect",
 } as const;
 
@@ -116,7 +117,8 @@ export const EFFECT_ANIM = {
   priestHeal: "effect-priest-heal",
 } as const;
 
-export const MAGIC_PROJECTILE_FRAME = 2;
+export const MAGIC_PROJECTILE_CROP = { x: 45, y: 10, width: 16, height: 28 } as const;
+export const MAGIC_PROJECTILE_ROTATION_OFFSET = Math.PI / 2;
 
 export const CLASS_FRAME = { width: 100, height: 100 } as const;
 /**
