@@ -14,6 +14,7 @@ declare global {
       blockedHireIds?: string[];
       mercFull?: boolean;
       score: number;
+      coins: number;
     }>;
     "game:upgrade-selected": CustomEvent<{ upgradeId?: string }>;
     "game:upgrade-reroll": CustomEvent<{ cost: number }>;

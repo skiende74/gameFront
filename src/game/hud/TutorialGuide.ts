@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { GAME_HEIGHT, GAME_WIDTH } from "../config";
 import type { GameHud } from "./GameHud";
 
 const FONT = "Galmuri11, monospace";
@@ -56,8 +55,6 @@ export class TutorialGuide {
 
   private readonly boxW = 680;
   private readonly boxH = 132;
-  private readonly boxCx = GAME_WIDTH / 2;
-  private readonly boxCy = GAME_HEIGHT - 190;
 
   constructor(scene: Phaser.Scene, hud: GameHud, cb: GuideCallbacks) {
     this.scene = scene;
@@ -103,7 +100,7 @@ export class TutorialGuide {
         gate: "next",
       },
       {
-        text: "웨이브가 끝나면 카드를 골라 용병단을 강화합니다. 마음에 안 들면 보유 포인트 100을 써서 [새로고침]으로 다시 뽑을 수 있어요.",
+        text: "웨이브가 끝나면 카드를 골라 용병단을 강화합니다. 마음에 안 들면 보유 코인 100을 써서 [새로고침]으로 다시 뽑을 수 있어요.",
         gate: "next",
       },
       {
@@ -166,8 +163,11 @@ export class TutorialGuide {
 
     this.layer = this.scene.add.container(0, 0).setScrollFactor(0).setDepth(80);
 
-    const left = this.boxCx - this.boxW / 2;
-    const top = this.boxCy - this.boxH / 2;
+    // 화면(캔버스) 크기에 맞춰 안내 박스를 하단 중앙에 배치한다.
+    const boxCx = this.scene.scale.width / 2;
+    const boxCy = this.scene.scale.height - 190;
+    const left = boxCx - this.boxW / 2;
+    const top = boxCy - this.boxH / 2;
 
     this.box = this.scene.add.graphics();
     this.box.fillStyle(0x0a0610, 0.96);
@@ -309,19 +309,21 @@ export class TutorialGuide {
       right = Math.max(right, r.right + pad);
       bottom = Math.max(bottom, r.bottom + pad);
     }
-    left = Phaser.Math.Clamp(left, 0, GAME_WIDTH);
-    top = Phaser.Math.Clamp(top, 0, GAME_HEIGHT);
-    right = Phaser.Math.Clamp(right, 0, GAME_WIDTH);
-    bottom = Phaser.Math.Clamp(bottom, 0, GAME_HEIGHT);
+    const screenW = this.scene.scale.width;
+    const screenH = this.scene.scale.height;
+    left = Phaser.Math.Clamp(left, 0, screenW);
+    top = Phaser.Math.Clamp(top, 0, screenH);
+    right = Phaser.Math.Clamp(right, 0, screenW);
+    bottom = Phaser.Math.Clamp(bottom, 0, screenH);
 
     const dark = 0x05030a;
     const alpha = 0.74;
     this.scrim.clear();
     this.scrim.fillStyle(dark, alpha);
-    this.scrim.fillRect(0, 0, GAME_WIDTH, top);
-    this.scrim.fillRect(0, bottom, GAME_WIDTH, GAME_HEIGHT - bottom);
+    this.scrim.fillRect(0, 0, screenW, top);
+    this.scrim.fillRect(0, bottom, screenW, screenH - bottom);
     this.scrim.fillRect(0, top, left, bottom - top);
-    this.scrim.fillRect(right, top, GAME_WIDTH - right, bottom - top);
+    this.scrim.fillRect(right, top, screenW - right, bottom - top);
     this.scrim.setVisible(true);
 
     this.highlight.setVisible(true);

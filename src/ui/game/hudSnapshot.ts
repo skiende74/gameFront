@@ -6,6 +6,8 @@ import type {
   GameHudSnapshot,
   HudBoss,
   HudPartyUnit,
+  HudResultMerc,
+  HudResultSynergy,
   HudStateSource,
   HudSynergyRow,
 } from "./hudTypes";
@@ -142,6 +144,28 @@ function synergyRows(party: HudStateSource["party"]): HudSynergyRow[] {
     }));
 }
 
+/** 결과/기록 저장용 용병 요약 목록을 만든다. */
+export function resultMercsFromSnapshot(snapshot: GameHudSnapshot): HudResultMerc[] {
+  return snapshot.party.map((unit) => ({
+    id: unit.id,
+    label: unit.label,
+    color: unit.color,
+    rank: unit.rank,
+    badge: unit.badge,
+    isPlayer: unit.isPlayer,
+  }));
+}
+
+/** 결과/기록 저장용 시너지 요약 목록을 만든다(현재 보유 중인 조합만). */
+export function resultSynergiesFromSnapshot(snapshot: GameHudSnapshot): HudResultSynergy[] {
+  return snapshot.synergies.map((row) => ({
+    key: row.key,
+    name: row.name,
+    progressLabel: row.progressLabel,
+    active: row.active,
+  }));
+}
+
 export function buildHudSnapshot(source: HudStateSource, boss: HudBoss | null = null): GameHudSnapshot {
   const remainingSec = Math.max(0, Math.ceil(HUD.totalTimeSec - source.elapsedSec));
   return {
@@ -164,6 +188,7 @@ export function buildHudSnapshot(source: HudStateSource, boss: HudBoss | null = 
     stats: {
       kills: source.kills,
       score: source.score,
+      coins: source.coins,
       finalScore: source.finalScore,
     },
     party: source.party.map(partyUnitSnapshot).filter((unit) => unit !== null),

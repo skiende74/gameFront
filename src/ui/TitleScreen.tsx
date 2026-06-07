@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SettingsModal } from "./SettingsModal";
 import { ControlsModal } from "./ControlsModal";
+import { ScoreboardModal } from "./ScoreboardModal";
 import { MercenaryRow } from "./MercenaryRow";
 import { Torch } from "./Torch";
 import { playCancel, playConfirm, playHover, playOpen } from "../audio/sfx";
 
 type Props = { onStart: () => void; onTutorial: () => void };
 
-type ModalKey = "settings" | "controls" | null;
+type ModalKey = "settings" | "controls" | "scoreboard" | null;
 
 type MenuItem = {
   id: string;
@@ -50,6 +51,14 @@ export function TitleScreen({ onStart, onTutorial }: Props) {
         onActivate: () => {
           playConfirm();
           onTutorial();
+        },
+      },
+      {
+        id: "scoreboard",
+        label: "기록",
+        onActivate: () => {
+          setOpenModal("scoreboard");
+          playOpen();
         },
       },
     ],
@@ -201,6 +210,7 @@ export function TitleScreen({ onStart, onTutorial }: Props) {
 
       <SettingsModal open={openModal === "settings"} onClose={closeModal} />
       <ControlsModal open={openModal === "controls"} onClose={closeModal} />
+      <ScoreboardModal open={openModal === "scoreboard"} onClose={closeModal} />
     </div>
   );
 }

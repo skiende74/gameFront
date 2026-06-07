@@ -16,6 +16,7 @@
   --color-blood-red: #c41e1e;
   --color-bone-white: #ece2c8;
   --color-ash-grey: #9a8da3;
+  --color-coin-gold: #ffd24a;
 
   --color-class-sword: #ff6b6b;
   --color-class-bow: #6bd96b;
@@ -198,6 +199,126 @@ canvas {
   pointer-events: none;
   animation: ember-rise 2.4s ease-out infinite;
   will-change: transform, opacity;
+}
+
+/* ─── HP danger (low health warning) ────────────────────────────────────── */
+
+@keyframes hp-danger-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 1px 1px 0 rgba(236, 226, 200, 0.1),
+      0 0 0 2px rgba(196, 30, 30, 0.45),
+      0 10px 28px rgba(0, 0, 0, 0.48),
+      0 0 14px rgba(196, 30, 30, 0.3);
+  }
+  50% {
+    box-shadow:
+      inset 1px 1px 0 rgba(236, 226, 200, 0.1),
+      0 0 0 2px rgba(255, 60, 60, 0.95),
+      0 10px 28px rgba(0, 0, 0, 0.48),
+      0 0 34px rgba(196, 30, 30, 0.85);
+  }
+}
+
+.hp-danger {
+  animation: hp-danger-pulse 0.85s ease-in-out infinite;
+}
+
+@keyframes heart-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  28% {
+    transform: scale(1.3);
+  }
+  44% {
+    transform: scale(1);
+  }
+}
+
+.heart-beat {
+  animation: heart-beat 0.85s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* ─── Modal entrance (backdrop fade + box pop-in) ───────────────────────── */
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-backdrop {
+  animation: modal-backdrop-in 0.2s ease-out;
+}
+
+.modal-pop {
+  animation: modal-pop-in 0.32s cubic-bezier(0.2, 0.8, 0.3, 1.1) both;
+}
+
+@keyframes emblem-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.emblem-in {
+  animation: emblem-rise-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.2) 0.1s both;
+}
+
+@keyframes victory-glow {
+  0%,
+  100% {
+    text-shadow:
+      0 0 14px rgba(255, 213, 138, 0.6),
+      0 0 34px rgba(255, 122, 58, 0.4);
+  }
+  50% {
+    text-shadow:
+      0 0 22px rgba(255, 233, 176, 0.9),
+      0 0 52px rgba(255, 122, 58, 0.65);
+  }
+}
+
+.victory-glow {
+  animation: victory-glow 2.4s ease-in-out infinite;
+}
+
+/* ─── Upgrade card (rarity tier coloring) ───────────────────────────────── */
+
+.upgrade-card {
+  border-color: color-mix(in srgb, var(--tier-color) 45%, transparent);
+  transition: all 0.15s ease-out;
+}
+
+.upgrade-card:hover,
+.upgrade-card:focus-visible {
+  outline: none;
+  border-color: var(--tier-color);
+  box-shadow: 0 0 26px var(--tier-glow);
+  transform: translateY(-4px);
 }
 
 /* ─── Title glow ────────────────────────────────────────────────────────── */

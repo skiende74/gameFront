@@ -23,8 +23,11 @@ export function PhaserGame({ classId, tutorial = false, devMode = false, devWave
         height: GAME_HEIGHT,
         backgroundColor: HEX.bg,
         scale: {
-          mode: Phaser.Scale.FIT,
-          autoCenter: Phaser.Scale.CENTER_BOTH,
+          // RESIZE: 캔버스를 항상 부모(=전체 화면) 크기에 맞춰 여백 없이 채운다.
+          // 모니터 비율이 무엇이든 그 비율 그대로 렌더링된다.
+          mode: Phaser.Scale.RESIZE,
+          width: GAME_WIDTH,
+          height: GAME_HEIGHT,
         },
         pixelArt: true,
         physics: {

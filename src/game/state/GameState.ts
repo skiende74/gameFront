@@ -18,6 +18,7 @@ export const GAME_EVENT = {
   party: "state-party",
   kills: "state-kills",
   score: "state-score",
+  coins: "state-coins",
   unitRankUp: "state-unit-rank-up",
   upgradeRequest: "state-upgrade-request",
   bossStart: "state-boss-start",
@@ -43,6 +44,8 @@ export class GameState extends Phaser.Events.EventEmitter {
   wave = 1;
   kills = 0;
   score = 0;
+  /** 리롤 등 인게임 재화로 쓰이는 코인. 적 처치 시 점수와 함께 적립된다. */
+  coins = 0;
   hp: number = HUD.playerMaxHp;
   maxHp: number = HUD.playerMaxHp;
   mercenaryDamageMultiplier = 1;
@@ -94,15 +97,25 @@ export class GameState extends Phaser.Events.EventEmitter {
   addKill(scoreValue = 0): void {
     this.kills += 1;
     this.score += scoreValue;
+    this.coins += scoreValue;
     this.emit(GAME_EVENT.kills, this.kills);
     this.emit(GAME_EVENT.score, this.score);
+    this.emit(GAME_EVENT.coins, this.coins);
   }
 
-  /** 점수를 포인트로 소비한다(카드 새로고침 등). 잔액이 모자라면 false. */
+  /** 점수를 포인트로 소비한다. 잔액이 모자라면 false. */
   spendScore(amount: number): boolean {
     if (amount <= 0 || this.score < amount) return false;
     this.score -= amount;
     this.emit(GAME_EVENT.score, this.score);
+    return true;
+  }
+
+  /** 코인을 소비한다(카드 새로고침 등). 잔액이 모자라면 false. */
+  spendCoins(amount: number): boolean {
+    if (amount <= 0 || this.coins < amount) return false;
+    this.coins -= amount;
+    this.emit(GAME_EVENT.coins, this.coins);
     return true;
   }
 

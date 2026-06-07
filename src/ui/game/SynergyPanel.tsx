@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { GameHudSnapshot, HudSynergyRow } from "./hudTypes.ts";
 
 type Props = {
@@ -56,19 +57,37 @@ function SynergyRow({ row }: { row: HudSynergyRow }) {
 }
 
 export function SynergyPanel({ rows }: Props) {
+  const [open, setOpen] = useState(true);
+
   if (rows.length === 0) return null;
 
   return (
     <aside className="pointer-events-auto absolute left-4 top-[154px] w-[252px] rounded-[6px] border-2 border-rune-violet/55 bg-dungeon-deepest/90 p-1.5 shadow-[inset_1px_1px_0_rgba(236,226,200,0.1),0_0_0_2px_rgba(0,0,0,0.55),0_12px_34px_rgba(0,0,0,0.5),0_0_24px_rgba(196,122,255,0.16)]">
-      <div className="mb-1 flex items-center justify-between rounded-[4px] border border-bone-white/10 bg-black/25 px-3 py-2">
-        <span className="text-[13px] text-bone-white">시너지</span>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`flex w-full items-center justify-between rounded-[4px] border border-bone-white/10 bg-black/25 px-3 py-2 text-left transition hover:border-rune-violet/50 hover:bg-rune-violet/10 ${open ? "mb-1" : ""}`}
+        aria-expanded={open}
+        aria-label={open ? "시너지 접기" : "시너지 펼치기"}
+      >
+        <span className="flex items-center gap-1.5">
+          <span
+            className={`text-[10px] text-rune-violet transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+            aria-hidden="true"
+          >
+            ▶
+          </span>
+          <span className="text-[13px] text-bone-white">시너지</span>
+        </span>
         <span className="font-pixel-en text-[9px] text-rune-violet">{rows.length}</span>
-      </div>
-      <div className="space-y-1">
-        {rows.map((row) => (
-          <SynergyRow key={row.key} row={row} />
-        ))}
-      </div>
+      </button>
+      {open && (
+        <div className="space-y-1">
+          {rows.map((row) => (
+            <SynergyRow key={row.key} row={row} />
+          ))}
+        </div>
+      )}
     </aside>
   );
 }

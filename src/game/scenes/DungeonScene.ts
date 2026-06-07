@@ -4,8 +4,6 @@ import {
   CLASS_DEFS,
   CLASS_FRAME,
   CLASS_SCALE,
-  GAME_HEIGHT,
-  GAME_WIDTH,
   HERO_ANIM,
   HERO_FRAME,
   HEX,
@@ -38,7 +36,11 @@ import {
   playClassAttackEffect,
 } from "../effects/classAttackEffects";
 import { getUpgrade, type UpgradeId } from "../data/upgrades";
-import { buildHudSnapshot } from "../../ui/game/hudSnapshot";
+import {
+  buildHudSnapshot,
+  resultMercsFromSnapshot,
+  resultSynergiesFromSnapshot,
+} from "../../ui/game/hudSnapshot";
 import {
   GAME_RESTART_REQUEST_EVENT,
   GAME_RESUME_REQUEST_EVENT,
@@ -85,6 +87,7 @@ export class DungeonScene extends Phaser.Scene {
   private floor!: Phaser.GameObjects.TileSprite;
   private floorTextureKey = "";
   private ambientTorchesSpawned = false;
+  private vignette?: Phaser.GameObjects.Image;
   private player!: Phaser.Physics.Arcade.Sprite;
   private shadow!: Phaser.GameObjects.Image;
   private keys?: WasdKeys;
@@ -121,6 +124,10 @@ export class DungeonScene extends Phaser.Scene {
   }
 
   create(): void {
+    // scene.restart()는 생성자를 다시 호출하지 않으므로, 이전 판에서 바뀐
+    // 런타임 상태를 여기서 직접 초기화한다. (안 하면 다시하기 시 게임이 멈춘다)
+    this.resetRuntimeState();
+
     this.cameras.main.setBackgroundColor(HEX.bg);
     this.cameras.main.setBounds(
       -WORLD_BOUNDARY / 2,
@@ -177,6 +184,7 @@ export class DungeonScene extends Phaser.Scene {
     this.state.on(GAME_EVENT.party, this.emitReactHud, this);
     this.state.on(GAME_EVENT.kills, this.emitReactHud, this);
     this.state.on(GAME_EVENT.score, this.emitReactHud, this);
+    this.state.on(GAME_EVENT.coins, this.emitReactHud, this);
 
     this.input.keyboard?.on("keydown-ESC", () => this.togglePause());
 
@@ -189,7 +197,7 @@ export class DungeonScene extends Phaser.Scene {
     this.upgradeRerollHandler = (event) => {
       if (!this.waitingForUpgrade || this.gameOver) return;
       const cost = (event as CustomEvent<{ cost?: number }>).detail?.cost ?? 0;
-      const ok = this.state.spendScore(cost);
+      const ok = this.state.spendCoins(cost);
       this.sfx.play(ok ? "uiConfirm" : "uiDenied");
     };
     window.addEventListener(UPGRADE_REROLL_EVENT, this.upgradeRerollHandler);
@@ -208,6 +216,8 @@ export class DungeonScene extends Phaser.Scene {
       };
       window.addEventListener(DEV_WAVE_SEC_EVENT, this.devWaveSecHandler);
     }
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutToScreen, this);
+    this.layoutToScreen();
     this.events.once("shutdown", this.cleanupScene, this);
     this.events.once("destroy", this.cleanupScene, this);
 
@@ -215,6 +225,34 @@ export class DungeonScene extends Phaser.Scene {
     emitPauseState(window, false);
     emitResultState(window, null);
     this.emitReactHud();
+  }
+
+  /**
+   * 다시하기(scene.restart) 대비 런타임 상태 초기화.
+   * scene.restart()는 동일 씬 인스턴스를 재사용해 생성자를 다시 타지 않으므로
+   * 클래스 필드 초기값이 재적용되지 않는다. 이전 판의 gameOver/paused 플래그가
+   * 남아 update()가 즉시 return 되고, 게임오버 때 멈춰둔 physics.world 도 그대로라
+   * 게임이 전혀 동작하지 않는다. 새 판마다 여기서 명시적으로 되돌린다.
+   */
+  private resetRuntimeState(): void {
+    this.paused = false;
+    this.gameOver = false;
+    this.waitingForUpgrade = false;
+    this.hurtCooldown = 0;
+    this.boss = undefined;
+    this.bossAura = undefined;
+    this.bossAttacking = false;
+    this.bossAttackCooldown = 0;
+    this.bossHud = null;
+    this.floorTextureKey = "";
+    this.ambientTorchesSpawned = false;
+    this.vignette = undefined;
+    this.lastHudEmitAt = 0;
+    this.facing = "down";
+    this.usingClass = false;
+    this.attacking = false;
+    this.hurting = false;
+    this.physics.world.resume();
   }
 
   /** 튜토리얼 모드: 자동 진행을 끄고 안내 가이드를 시작한다. */
@@ -246,13 +284,17 @@ export class DungeonScene extends Phaser.Scene {
     else this.sfx.play("victory");
     this.physics.world.pause();
 
+    const snapshot = buildHudSnapshot(this.state, null);
     const result = {
       victory: payload.victory,
       elapsedSec: this.state.elapsedSec,
       kills: this.state.kills,
       score: this.state.score,
+      coins: this.state.coins,
       finalScore: this.state.finalScore,
       wave: this.state.wave,
+      mercs: resultMercsFromSnapshot(snapshot),
+      synergies: resultSynergiesFromSnapshot(snapshot),
     } satisfies HudResult;
     emitPauseState(window, false);
     emitResultState(window, result);
@@ -470,6 +512,7 @@ export class DungeonScene extends Phaser.Scene {
           blockedHireIds: this.state.blockedHireIds,
           mercFull: this.state.mercFull,
           score: this.state.score,
+          coins: this.state.coins,
         },
       }),
     );
@@ -599,8 +642,8 @@ export class DungeonScene extends Phaser.Scene {
   }
 
   private showBossBanner(name: string): void {
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2 - 60;
+    const cx = this.scale.width / 2;
+    const cy = this.scale.height / 2 - 60;
     const banner = this.add.container(0, 0).setScrollFactor(0).setDepth(86);
 
     const title = this.add
@@ -635,6 +678,7 @@ export class DungeonScene extends Phaser.Scene {
   }
 
   private cleanupScene(): void {
+    this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutToScreen, this);
     if (this.upgradeSelectedHandler) {
       window.removeEventListener(UPGRADE_SELECTED_EVENT, this.upgradeSelectedHandler);
       this.upgradeSelectedHandler = undefined;
@@ -666,7 +710,7 @@ export class DungeonScene extends Phaser.Scene {
     this.floorTextureKey = key;
 
     this.floor = this.add
-      .tileSprite(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, key)
+      .tileSprite(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, key)
       .setOrigin(0.5, 0.5)
       .setScrollFactor(0)
       .setDepth(0);
@@ -716,6 +760,13 @@ export class DungeonScene extends Phaser.Scene {
     this.applyFloorScale(key);
     this.syncFloorScroll();
     if (!this.isStageBackground(key)) this.spawnAmbientTorches();
+  }
+
+  /** 화면(캔버스) 크기에 맞춰 전체 화면을 덮는 요소(바닥·비네트)를 다시 맞춘다. */
+  private layoutToScreen(): void {
+    const { width, height } = this.scale;
+    if (this.floor) this.floor.setPosition(width / 2, height / 2).setSize(width, height);
+    if (this.vignette) this.vignette.setPosition(0, 0).setDisplaySize(width, height);
   }
 
   private registerAnimations(): void {
@@ -947,12 +998,13 @@ export class DungeonScene extends Phaser.Scene {
 
   private drawVignette(): void {
     if (!this.textures.exists(TEX.vignette)) return;
-    this.add
+    this.vignette = this.add
       .image(0, 0, TEX.vignette)
       .setOrigin(0, 0)
       .setDepth(18)
       .setScrollFactor(0)
-      .setBlendMode(Phaser.BlendModes.MULTIPLY);
+      .setBlendMode(Phaser.BlendModes.MULTIPLY)
+      .setDisplaySize(this.scale.width, this.scale.height);
   }
 
   private buildHud(): void {

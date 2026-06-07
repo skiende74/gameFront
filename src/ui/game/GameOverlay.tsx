@@ -11,6 +11,33 @@ import {
 } from "./hudEvents.ts";
 import type { GameHudSnapshot, HudResult } from "./hudTypes.ts";
 
+function Key({ children }: { children: string }) {
+  return (
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border border-bone-white/30 bg-black/45 px-1 font-pixel-en text-[9px] leading-none text-bone-white/90 shadow-[inset_0_-2px_0_rgba(0,0,0,0.55),0_1px_2px_rgba(0,0,0,0.6)]">
+      {children}
+    </kbd>
+  );
+}
+
+function ControlsHint() {
+  return (
+    <div className="absolute bottom-4 left-4 flex items-center gap-1.5 text-[11px] text-bone-white/70">
+      <Key>W</Key>
+      <Key>A</Key>
+      <Key>S</Key>
+      <Key>D</Key>
+      <span className="text-ash-grey/70">/</span>
+      <Key>↑</Key>
+      <Key>↓</Key>
+      <Key>←</Key>
+      <Key>→</Key>
+      <span className="ml-1 mr-2">이동</span>
+      <Key>ESC</Key>
+      <span className="ml-1">일시정지</span>
+    </div>
+  );
+}
+
 export function GameOverlay() {
   const [snapshot, setSnapshot] = useState<GameHudSnapshot | null>(null);
   const [paused, setPaused] = useState(false);
@@ -40,9 +67,7 @@ export function GameOverlay() {
         <BossHud boss={snapshot.boss} />
         <SynergyPanel rows={snapshot.synergies} />
         <MercBar party={snapshot.party} />
-        <div className="absolute bottom-4 left-4 text-[12px] leading-relaxed text-bone-white/70">
-          WASD / 방향키 이동 · ESC 일시정지
-        </div>
+        <ControlsHint />
       </GameStage>
       {(paused || result) && (
         <div className="pointer-events-none fixed inset-0 z-50 font-pixel-ko text-bone-white">
