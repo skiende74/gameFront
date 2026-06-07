@@ -117,6 +117,10 @@ export class DungeonScene extends Phaser.Scene {
   }
 
   create(): void {
+    // scene.restart()는 생성자를 다시 호출하지 않으므로, 이전 판에서 바뀐
+    // 런타임 상태를 여기서 직접 초기화한다. (안 하면 다시하기 시 게임이 멈춘다)
+    this.resetRuntimeState();
+
     this.cameras.main.setBackgroundColor(HEX.bg);
     this.cameras.main.setBounds(
       -WORLD_BOUNDARY / 2,
@@ -211,6 +215,31 @@ export class DungeonScene extends Phaser.Scene {
     emitPauseState(window, false);
     emitResultState(window, null);
     this.emitReactHud();
+  }
+
+  /**
+   * 다시하기(scene.restart) 대비 런타임 상태 초기화.
+   * scene.restart()는 동일 씬 인스턴스를 재사용해 생성자를 다시 타지 않으므로
+   * 클래스 필드 초기값이 재적용되지 않는다. 이전 판의 gameOver/paused 플래그가
+   * 남아 update()가 즉시 return 되고, 게임오버 때 멈춰둔 physics.world 도 그대로라
+   * 게임이 전혀 동작하지 않는다. 새 판마다 여기서 명시적으로 되돌린다.
+   */
+  private resetRuntimeState(): void {
+    this.paused = false;
+    this.gameOver = false;
+    this.waitingForUpgrade = false;
+    this.hurtCooldown = 0;
+    this.boss = undefined;
+    this.bossAura = undefined;
+    this.bossAttacking = false;
+    this.bossAttackCooldown = 0;
+    this.bossHud = null;
+    this.lastHudEmitAt = 0;
+    this.facing = "down";
+    this.usingClass = false;
+    this.attacking = false;
+    this.hurting = false;
+    this.physics.world.resume();
   }
 
   /** 튜토리얼 모드: 자동 진행을 끄고 안내 가이드를 시작한다. */
