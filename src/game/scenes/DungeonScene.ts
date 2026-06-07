@@ -15,6 +15,7 @@ import {
   TILE_SCALE,
   TORCH_FRAMES,
   WORLD_BOUNDARY,
+  stageBackgroundTex,
 } from "../config";
 import { GameHud } from "../hud/GameHud";
 import { TutorialGuide } from "../hud/TutorialGuide";
@@ -82,6 +83,8 @@ type Facing = "down" | "up" | "side";
 
 export class DungeonScene extends Phaser.Scene {
   private floor!: Phaser.GameObjects.TileSprite;
+  private floorTextureKey = "";
+  private ambientTorchesSpawned = false;
   private player!: Phaser.Physics.Arcade.Sprite;
   private shadow!: Phaser.GameObjects.Image;
   private keys?: WasdKeys;
@@ -169,7 +172,7 @@ export class DungeonScene extends Phaser.Scene {
     this.state.on(GAME_EVENT.upgradeRequest, this.onUpgradeRequest, this);
     this.state.on(GAME_EVENT.bossStart, this.onBossStart, this);
     this.state.on(GAME_EVENT.bossEnd, this.onBossEnd, this);
-    this.state.on(GAME_EVENT.wave, this.emitReactHud, this);
+    this.state.on(GAME_EVENT.wave, this.onWaveChanged, this);
     this.state.on(GAME_EVENT.hp, this.emitReactHud, this);
     this.state.on(GAME_EVENT.party, this.emitReactHud, this);
     this.state.on(GAME_EVENT.kills, this.emitReactHud, this);
@@ -660,9 +663,8 @@ export class DungeonScene extends Phaser.Scene {
   }
 
   private createInfiniteFloor(): void {
-    const useStage = this.textures.exists(TEX.stage1Background);
-    const useBaked = this.textures.exists(TEX.floorPatch);
-    const key = useStage ? TEX.stage1Background : useBaked ? TEX.floorPatch : TEX.procFloor;
+    const key = this.floorTexForWave();
+    this.floorTextureKey = key;
 
     this.floor = this.add
       .tileSprite(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, key)
@@ -670,13 +672,41 @@ export class DungeonScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(0);
 
-    if (useStage) {
+    this.applyFloorScale(key);
+  }
+
+  private floorTexForWave(): string {
+    const stageTex = stageBackgroundTex(this.state.wave);
+    if (stageTex && this.textures.exists(stageTex)) return stageTex;
+    if (this.textures.exists(TEX.floorPatch)) return TEX.floorPatch;
+    return TEX.procFloor;
+  }
+
+  private applyFloorScale(key: string): void {
+    if (key === TEX.stage1Background) {
       this.floor.tileScaleX = STAGE_BACKGROUND_SCALE;
       this.floor.tileScaleY = STAGE_BACKGROUND_SCALE;
-    } else if (!useBaked) {
+    } else if (key === TEX.procFloor) {
       this.floor.tileScaleX = TILE_SCALE;
       this.floor.tileScaleY = TILE_SCALE;
+    } else {
+      this.floor.tileScaleX = 1;
+      this.floor.tileScaleY = 1;
     }
+  }
+
+  private onWaveChanged(): void {
+    this.updateFloorTexture();
+    this.emitReactHud();
+  }
+
+  private updateFloorTexture(): void {
+    const key = this.floorTexForWave();
+    if (key === this.floorTextureKey) return;
+    this.floor.setTexture(key);
+    this.floorTextureKey = key;
+    this.applyFloorScale(key);
+    if (key !== TEX.stage1Background) this.spawnAmbientTorches();
   }
 
   private registerAnimations(): void {
@@ -853,7 +883,8 @@ export class DungeonScene extends Phaser.Scene {
   }
 
   private spawnAmbientTorches(): void {
-    if (this.textures.exists(TEX.stage1Background)) return;
+    if (this.ambientTorchesSpawned || this.floorTextureKey === TEX.stage1Background) return;
+    this.ambientTorchesSpawned = true;
 
     const ringRadius = 360;
     const positions = [

@@ -93,6 +93,10 @@ export const PACK_PATH = {
   ),
 } as const;
 
+export function stageBackgroundTex(wave: number): string | undefined {
+  return wave === 1 ? TEX.stage1Background : undefined;
+}
+
 export const HERO_ANIM = {
   idleDown: "hero-idle-down",
   idleUp: "hero-idle-up",
