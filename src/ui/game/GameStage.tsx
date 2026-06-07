@@ -23,7 +23,6 @@ export function GameStage({ children }: { children: ReactNode }) {
         className="relative font-pixel-ko text-bone-white"
         style={{ width: GAME_WIDTH, height: GAME_HEIGHT, transform: `scale(${scale})` }}
       >
-        <div className="stage-vignette" aria-hidden="true" />
         {children}
       </div>
     </div>
