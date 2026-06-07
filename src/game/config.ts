@@ -67,7 +67,6 @@ export const TEX = {
   procTorch: "tex-proc-torch",
   flameParticle: "tex-flame-particle",
   arrow: "tex-arrow",
-  wizardAttackEffect: "tex-wizard-attack02-effect",
   wizardExplosionEffect: "tex-wizard-attack01-effect",
   priestHealEffect: "tex-priest-heal-effect",
 } as const;
@@ -83,9 +82,6 @@ export const PACK_PATH = {
   heroShadow: "assets/characters/hero/shadow.png",
   arrow: encodeURI(
     "assets/Tiny RPG Character Asset Pack v1.03 -Full 20 Characters/Characters(100x100)/Archer/Arrow(projectile)/Arrow02(100x100).png",
-  ),
-  wizardAttackEffect: encodeURI(
-    "assets/Tiny RPG Character Asset Pack v1.03 -Full 20 Characters/Magic(Projectile)/Wizard-Attack02_Effect.png",
   ),
   wizardExplosionEffect: encodeURI(
     "assets/Tiny RPG Character Asset Pack v1.03 -Full 20 Characters/Magic(Projectile)/Wizard-Attack01_Effect.png",
@@ -116,10 +112,11 @@ export const CLASS_ANIM = {
 } as const;
 
 export const EFFECT_ANIM = {
-  wizardAttack: "effect-wizard-attack02",
   wizardExplosion: "effect-wizard-explosion",
   priestHeal: "effect-priest-heal",
 } as const;
+
+export const MAGIC_PROJECTILE_FRAME = 2;
 
 export const CLASS_FRAME = { width: 100, height: 100 } as const;
 /**

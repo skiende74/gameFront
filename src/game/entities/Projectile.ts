@@ -9,6 +9,7 @@ export type ProjectileConfig = {
   /** 0 이면 단일 타격, >0 이면 착탄 시 광역 피해 반경(px) */
   aoe: number;
   texture: string;
+  frame?: number;
   scale: number;
   tint: number;
   maxRange: number;
@@ -40,6 +41,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     this.maxRange = cfg.maxRange;
 
     this.setTexture(cfg.texture);
+    if (cfg.frame !== undefined) this.setFrame(cfg.frame);
     this.setPosition(cfg.x, cfg.y);
     this.setScale(cfg.scale);
     this.setTint(cfg.tint);

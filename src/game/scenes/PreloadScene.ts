@@ -110,7 +110,6 @@ export class PreloadScene extends Phaser.Scene {
 
     // 화살 투사체 (단일 이미지)
     this.load.image(TEX.arrow, PACK_PATH.arrow);
-    this.load.spritesheet(TEX.wizardAttackEffect, PACK_PATH.wizardAttackEffect, classFrame);
     this.load.spritesheet(TEX.wizardExplosionEffect, PACK_PATH.wizardExplosionEffect, classFrame);
     this.load.spritesheet(TEX.priestHealEffect, PACK_PATH.priestHealEffect, classFrame);
     for (const id of Object.keys(SFX_ASSETS) as SfxId[]) {
