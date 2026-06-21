@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { BossHud, TopHud } from "./TopHud.tsx";
 import { MercBar } from "./MercBar.tsx";
 import { SynergyPanel } from "./SynergyPanel.tsx";
+import { MobileControls } from "./MobileControls.tsx";
+import { MobileHud } from "./MobileHud.tsx";
 import { GameStage } from "./GameStage.tsx";
 import { PauseOverlay, ResultOverlay } from "./GameModals.tsx";
+import { useMobileHud } from "./useMobileHud.ts";
 import {
   GAME_HUD_EVENT,
   GAME_PAUSE_EVENT,
@@ -42,6 +45,7 @@ export function GameOverlay() {
   const [snapshot, setSnapshot] = useState<GameHudSnapshot | null>(null);
   const [paused, setPaused] = useState(false);
   const [result, setResult] = useState<HudResult | null>(null);
+  const isMobileHud = useMobileHud();
 
   useEffect(() => {
     const onHud = (event: WindowEventMap[typeof GAME_HUD_EVENT]) => setSnapshot(event.detail);
@@ -63,11 +67,20 @@ export function GameOverlay() {
   return (
     <>
       <GameStage>
-        <TopHud snapshot={snapshot} />
-        <BossHud boss={snapshot.boss} />
-        <SynergyPanel rows={snapshot.synergies} />
-        <MercBar party={snapshot.party} />
-        <ControlsHint />
+        {isMobileHud ? (
+          <>
+            <MobileHud snapshot={snapshot} />
+            <MobileControls />
+          </>
+        ) : (
+          <>
+            <TopHud snapshot={snapshot} />
+            <BossHud boss={snapshot.boss} />
+            <SynergyPanel rows={snapshot.synergies} />
+            <MercBar party={snapshot.party} />
+          </>
+        )}
+        {!isMobileHud && <ControlsHint />}
       </GameStage>
       {(paused || result) && (
         <div className="pointer-events-none fixed inset-0 z-50 font-pixel-ko text-bone-white">
