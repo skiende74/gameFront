@@ -1,3 +1,5 @@
+import { GAME_PAUSE_REQUEST_EVENT } from "./hudEvents.ts";
+
 type ControlKey = {
   label: string;
   key: string;
@@ -37,8 +39,7 @@ function DirectionButton({ control }: { control: ControlKey }) {
 
 export function MobileControls() {
   const pause = () => {
-    emitKey("keydown", "Escape", "Escape");
-    emitKey("keyup", "Escape", "Escape");
+    window.dispatchEvent(new CustomEvent(GAME_PAUSE_REQUEST_EVENT));
   };
 
   return (

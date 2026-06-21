@@ -42,6 +42,7 @@ import {
   resultSynergiesFromSnapshot,
 } from "../../ui/game/hudSnapshot";
 import {
+  GAME_PAUSE_REQUEST_EVENT,
   GAME_RESTART_REQUEST_EVENT,
   GAME_RESUME_REQUEST_EVENT,
   emitHudSnapshot,
@@ -99,6 +100,7 @@ export class DungeonScene extends Phaser.Scene {
   private upgradeSelectedHandler?: EventListener;
   private upgradeRerollHandler?: EventListener;
   private devWaveSecHandler?: EventListener;
+  private pauseRequestHandler?: EventListener;
   private resumeRequestHandler?: EventListener;
   private restartRequestHandler?: EventListener;
   private hurtCooldown = 0;
@@ -202,10 +204,12 @@ export class DungeonScene extends Phaser.Scene {
     };
     window.addEventListener(UPGRADE_REROLL_EVENT, this.upgradeRerollHandler);
 
+    this.pauseRequestHandler = () => this.togglePause();
     this.resumeRequestHandler = () => this.setPaused(false);
     this.restartRequestHandler = () => {
       if (this.gameOver) this.scene.restart();
     };
+    window.addEventListener(GAME_PAUSE_REQUEST_EVENT, this.pauseRequestHandler);
     window.addEventListener(GAME_RESUME_REQUEST_EVENT, this.resumeRequestHandler);
     window.addEventListener(GAME_RESTART_REQUEST_EVENT, this.restartRequestHandler);
 
@@ -690,6 +694,10 @@ export class DungeonScene extends Phaser.Scene {
     if (this.devWaveSecHandler) {
       window.removeEventListener(DEV_WAVE_SEC_EVENT, this.devWaveSecHandler);
       this.devWaveSecHandler = undefined;
+    }
+    if (this.pauseRequestHandler) {
+      window.removeEventListener(GAME_PAUSE_REQUEST_EVENT, this.pauseRequestHandler);
+      this.pauseRequestHandler = undefined;
     }
     if (this.resumeRequestHandler) {
       window.removeEventListener(GAME_RESUME_REQUEST_EVENT, this.resumeRequestHandler);

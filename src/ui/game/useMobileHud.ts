@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export const MOBILE_HUD_QUERY =
-  "(max-width: 767px), (hover: none) and (pointer: coarse) and (max-height: 480px)";
+  "(max-width: 767px), (max-width: 960px) and (max-height: 480px), (hover: none) and (pointer: coarse) and (max-height: 480px)";
 
 function matchesMobileHud(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;

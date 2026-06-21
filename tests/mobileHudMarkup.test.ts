@@ -14,6 +14,7 @@ assert.ok(existsSync("src/ui/game/MobileControls.tsx"));
 
 const hook = readFileSync("src/ui/game/useMobileHud.ts", "utf8");
 assert.ok(hook.includes("max-width: 767px"));
+assert.ok(hook.includes("max-width: 960px"));
 assert.ok(hook.includes("pointer: coarse"));
 assert.ok(hook.includes("max-height: 480px"));
 
@@ -28,4 +29,11 @@ const controls = readFileSync("src/ui/game/MobileControls.tsx", "utf8");
 assert.ok(controls.includes("KeyboardEvent"));
 assert.ok(controls.includes("keydown"));
 assert.ok(controls.includes("keyup"));
-assert.ok(controls.includes("Escape"));
+assert.ok(controls.includes("GAME_PAUSE_REQUEST_EVENT"));
+
+const events = readFileSync("src/ui/game/hudEvents.ts", "utf8");
+assert.ok(events.includes("GAME_PAUSE_REQUEST_EVENT"));
+
+const scene = readFileSync("src/game/scenes/DungeonScene.ts", "utf8");
+assert.ok(scene.includes("GAME_PAUSE_REQUEST_EVENT"));
+assert.ok(scene.includes("togglePause"));
