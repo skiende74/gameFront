@@ -26,6 +26,10 @@ assert.ok(mobileHud.includes("MobileSynergyPanel"));
 assert.ok(mobileHud.includes("가로모드 권장"));
 
 const controls = readFileSync("src/ui/game/MobileControls.tsx", "utf8");
+assert.ok(controls.includes('glyph: "▲"'));
+assert.ok(controls.includes('glyph: "◀"'));
+assert.ok(controls.includes('glyph: "▼"'));
+assert.ok(controls.includes('glyph: "▶"'));
 assert.ok(controls.includes("KeyboardEvent"));
 assert.ok(controls.includes("keydown"));
 assert.ok(controls.includes("keyup"));

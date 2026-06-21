@@ -2,16 +2,17 @@ import { GAME_PAUSE_REQUEST_EVENT } from "./hudEvents.ts";
 
 type ControlKey = {
   label: string;
+  glyph: string;
   key: string;
   code: string;
   className: string;
 };
 
 const DIRECTIONS: ControlKey[] = [
-  { label: "위", key: "ArrowUp", code: "ArrowUp", className: "col-start-2 row-start-1" },
-  { label: "왼쪽", key: "ArrowLeft", code: "ArrowLeft", className: "col-start-1 row-start-2" },
-  { label: "아래", key: "ArrowDown", code: "ArrowDown", className: "col-start-2 row-start-3" },
-  { label: "오른쪽", key: "ArrowRight", code: "ArrowRight", className: "col-start-3 row-start-2" },
+  { label: "위", glyph: "▲", key: "ArrowUp", code: "ArrowUp", className: "col-start-2 row-start-1" },
+  { label: "왼쪽", glyph: "◀", key: "ArrowLeft", code: "ArrowLeft", className: "col-start-1 row-start-2" },
+  { label: "아래", glyph: "▼", key: "ArrowDown", code: "ArrowDown", className: "col-start-2 row-start-3" },
+  { label: "오른쪽", glyph: "▶", key: "ArrowRight", code: "ArrowRight", className: "col-start-3 row-start-2" },
 ];
 
 function emitKey(type: "keydown" | "keyup", key: string, code: string): void {
@@ -30,9 +31,9 @@ function DirectionButton({ control }: { control: ControlKey }) {
       onPointerUp={release}
       onPointerCancel={release}
       onPointerLeave={release}
-      className={`h-11 w-11 rounded-[6px] border-2 border-bone-white/35 bg-dungeon-deepest/72 text-[16px] text-bone-white shadow-[0_0_0_2px_rgba(0,0,0,0.55),0_8px_18px_rgba(0,0,0,0.45)] active:translate-y-0.5 active:border-torch-core/70 active:text-torch-core ${control.className}`}
+      className={`h-11 w-11 rounded-[6px] border-2 border-bone-white/35 bg-dungeon-deepest/72 font-pixel-en text-[14px] text-bone-white shadow-[0_0_0_2px_rgba(0,0,0,0.55),0_8px_18px_rgba(0,0,0,0.45)] active:translate-y-0.5 active:border-torch-core/70 active:text-torch-core ${control.className}`}
     >
-      {control.label}
+      {control.glyph}
     </button>
   );
 }
