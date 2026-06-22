@@ -26,7 +26,7 @@ export function DevModePanel({ initialWaveSec }: Props) {
   return (
     <div
       className="fixed bottom-4 right-4 w-56 border-2 border-torch-core/70 bg-dungeon-deepest/90 p-3 font-pixel-ko text-bone-white shadow-[0_0_24px_rgba(255,122,58,0.35)]"
-      style={{ zIndex: 60 }}
+      style={{ zIndex: 30 }}
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="font-pixel-en text-[10px] tracking-[0.2em] text-torch-core">DEV</span>

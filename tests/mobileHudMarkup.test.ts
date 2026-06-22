@@ -36,6 +36,9 @@ assert.ok(controls.includes('glyph: "▶"'));
 assert.ok(controls.includes("emitMobileMove"));
 assert.ok(controls.includes("pressed: true"));
 assert.ok(controls.includes("pressed: false"));
+assert.ok(controls.includes("onPointerEnter"));
+assert.ok(controls.includes("onPointerMove"));
+assert.ok(controls.includes("touchAction: \"none\""));
 assert.ok(!controls.includes("KeyboardEvent"));
 assert.ok(controls.includes("GAME_PAUSE_REQUEST_EVENT"));
 
