@@ -4,6 +4,9 @@ import { existsSync, readFileSync } from "node:fs";
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
+assert.equal(packageJson.scripts["android:sync"], "npm run build && cap sync android");
+assert.equal(packageJson.scripts["android:apk:debug"], "npm run android:sync && cd android && ./gradlew assembleDebug");
+
 assert.ok(deps["@capacitor/core"]);
 assert.ok(deps["@capacitor/android"]);
 assert.ok(deps["@capacitor/cli"]);
