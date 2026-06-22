@@ -76,7 +76,7 @@ export function MobileMercBar({ party }: { party: GameHudSnapshot["party"] }) {
   if (party.length === 0) return null;
 
   return (
-    <nav className="pointer-events-auto absolute bottom-[calc(env(safe-area-inset-bottom)+12px)] left-1/2 flex max-w-[calc(100vw-164px)] -translate-x-1/2 gap-1.5 overflow-x-auto rounded-[6px] border border-bone-white/10 bg-black/24 px-1.5 py-1 shadow-[0_0_20px_rgba(0,0,0,0.38)]" aria-label="모바일 용병 HUD">
+    <nav className="touch-scroll pointer-events-auto absolute bottom-[calc(env(safe-area-inset-bottom)+12px)] left-1/2 flex max-w-[calc(100vw-164px)] -translate-x-1/2 gap-1.5 overflow-x-auto rounded-[6px] border border-bone-white/10 bg-black/24 px-1.5 py-1 shadow-[0_0_20px_rgba(0,0,0,0.38)]" aria-label="모바일 용병 HUD">
       {party.map((unit) => (
         <MobileMercSlot key={unit.uid} unit={unit} />
       ))}
@@ -94,7 +94,7 @@ export function MobileSynergyPanel({ rows }: { rows: GameHudSnapshot["synergies"
         시너지 {rows.filter((row) => row.active).length}/{rows.length}
       </button>
       {open && (
-        <aside className="pointer-events-auto absolute bottom-0 left-0 right-0 max-h-[48vh] overflow-y-auto rounded-t-[6px] border-t-2 border-rune-violet/65 bg-dungeon-deepest/96 p-2 shadow-[0_-12px_32px_rgba(0,0,0,0.65)]">
+        <aside className="touch-scroll pointer-events-auto absolute bottom-0 left-0 right-0 max-h-[48vh] overflow-y-auto rounded-t-[6px] border-t-2 border-rune-violet/65 bg-dungeon-deepest/96 p-2 shadow-[0_-12px_32px_rgba(0,0,0,0.65)]">
           {rows.map((row) => (
             <div key={row.key} className={`mb-1 rounded-[4px] border px-2 py-1.5 ${row.active ? "border-torch-core/50 text-torch-core" : "border-bone-white/12 text-bone-white/72"}`}>
               <div className="flex items-center justify-between text-[12px]">

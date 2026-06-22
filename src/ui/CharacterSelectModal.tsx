@@ -47,14 +47,14 @@ export function CharacterSelectModal({ open, onClose, onSelect }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/45 p-2 backdrop-blur-[3px] sm:p-4"
+      className="touch-scroll fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/45 p-2 backdrop-blur-[3px] sm:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="용병 선택"
     >
       <div
-        className="relative max-h-[calc(100dvh-16px)] w-full max-w-3xl overflow-y-auto border-4 border-bone-white/30 bg-dungeon-stone p-4 font-pixel-ko shadow-[0_0_40px_rgba(255,122,58,0.35)] sm:p-6"
+        className="touch-scroll relative max-h-[calc(100dvh-16px)] w-full max-w-3xl overflow-y-auto border-4 border-bone-white/30 bg-dungeon-stone p-4 font-pixel-ko shadow-[0_0_40px_rgba(255,122,58,0.35)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-1 flex items-center justify-between border-b-2 border-bone-white/20 pb-3">

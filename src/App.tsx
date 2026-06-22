@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 import { useEventListener } from "usehooks-ts";
 import { TitleScreen } from "./ui/TitleScreen.tsx";
@@ -26,6 +27,18 @@ function GamePage() {
   const isTutorial = searchParams.get("tutorial") === "1";
   const devMode = searchParams.get("dev") === "1";
   const devWaveSec = devMode ? parseDevWaveSec(searchParams.get("waveSec")) : undefined;
+
+  useEffect(() => {
+    const preventGameBrowserGesture = (event: Event) => event.preventDefault();
+    window.addEventListener("contextmenu", preventGameBrowserGesture);
+    window.addEventListener("selectstart", preventGameBrowserGesture);
+    window.addEventListener("dragstart", preventGameBrowserGesture);
+    return () => {
+      window.removeEventListener("contextmenu", preventGameBrowserGesture);
+      window.removeEventListener("selectstart", preventGameBrowserGesture);
+      window.removeEventListener("dragstart", preventGameBrowserGesture);
+    };
+  }, []);
 
   useEventListener("game:exit", () => {
     if (selectedClass || isTutorial) navigate("/");

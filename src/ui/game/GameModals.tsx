@@ -50,8 +50,8 @@ function KeyCap({ children }: { children: string }) {
 
 export function PauseOverlay() {
   return (
-    <div className="modal-backdrop pointer-events-auto absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-dungeon-deepest/70 p-2 backdrop-blur-sm sm:p-4">
-      <section className="modal-pop flex max-h-[calc(100dvh-16px)] w-full max-w-[360px] flex-col items-center overflow-y-auto rounded-[6px] border-2 border-bone-white/70 bg-dungeon-deepest/95 px-5 py-6 shadow-[inset_1px_1px_0_rgba(236,226,200,0.12),0_0_0_2px_rgba(0,0,0,0.65),0_0_42px_rgba(255,122,58,0.18),0_18px_52px_rgba(0,0,0,0.78)] sm:px-8 sm:py-9">
+    <div className="modal-backdrop touch-scroll pointer-events-auto absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-dungeon-deepest/70 p-2 backdrop-blur-sm sm:p-4">
+      <section className="modal-pop touch-scroll flex max-h-[calc(100dvh-16px)] w-full max-w-[360px] flex-col items-center overflow-y-auto rounded-[6px] border-2 border-bone-white/70 bg-dungeon-deepest/95 px-5 py-6 shadow-[inset_1px_1px_0_rgba(236,226,200,0.12),0_0_0_2px_rgba(0,0,0,0.65),0_0_42px_rgba(255,122,58,0.18),0_18px_52px_rgba(0,0,0,0.78)] sm:px-8 sm:py-9">
         <PixelIcon name="pause" className="emblem-in h-10 w-10 text-torch-core drop-shadow-[0_0_12px_rgba(255,122,58,0.6)]" />
         <h2 className="mt-4 text-2xl text-bone-white drop-shadow-[0_0_10px_rgba(255,213,138,0.35)] sm:text-3xl">일시정지</h2>
         <div className="mt-3 hidden items-center gap-1.5 text-sm text-ash-grey sm:flex">
@@ -104,9 +104,9 @@ export function ResultOverlay({ result }: { result: HudResult }) {
   const boxShadow = `inset 1px 1px 0 rgba(236,226,200,0.12), 0 0 0 2px rgba(0,0,0,0.65), ${theme.glow}, 0 18px 52px rgba(0,0,0,0.78)`;
 
   return (
-    <div className="modal-backdrop pointer-events-auto absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-dungeon-deepest/85 p-2 backdrop-blur-sm sm:p-4">
+    <div className="modal-backdrop touch-scroll pointer-events-auto absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-dungeon-deepest/85 p-2 backdrop-blur-sm sm:p-4">
       <section
-        className={`modal-pop flex max-h-[calc(100dvh-16px)] w-full max-w-[440px] flex-col items-center overflow-y-auto rounded-[6px] border-2 ${theme.border} bg-dungeon-deepest/95 px-5 py-6 sm:px-8 sm:py-9`}
+        className={`modal-pop touch-scroll flex max-h-[calc(100dvh-16px)] w-full max-w-[440px] flex-col items-center overflow-y-auto rounded-[6px] border-2 ${theme.border} bg-dungeon-deepest/95 px-5 py-6 sm:px-8 sm:py-9`}
         style={{ boxShadow }}
       >
         <PixelIcon name={theme.icon} className={`emblem-in h-10 w-10 sm:h-12 sm:w-12 ${theme.emblemClass}`} />

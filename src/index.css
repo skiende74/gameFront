@@ -41,19 +41,49 @@ body,
   color: var(--color-bone-white);
   font-family: var(--font-pixel-ko);
   overflow: hidden;
+  overscroll-behavior: none;
+  user-select: none;
   -webkit-font-smoothing: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
   -moz-osx-font-smoothing: grayscale;
 }
 
 button {
   font-family: inherit;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
 }
 
 img,
 canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+}
+
+canvas,
+.game-canvas-surface {
+  touch-action: none;
+}
+
+.game-touch-surface {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.touch-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Dungeon wall (subtle shading, no grid) ────────────────────────────── */

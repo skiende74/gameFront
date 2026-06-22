@@ -56,13 +56,13 @@ export function UpgradeModal() {
 
   return (
     <div
-      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-dungeon-deepest/85 p-2 font-pixel-ko backdrop-blur-sm sm:p-4"
+      className="modal-backdrop touch-scroll fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-dungeon-deepest/85 p-2 font-pixel-ko backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="업그레이드 선택"
     >
       <div
-        className="modal-pop flex max-h-[calc(100dvh-16px)] w-full max-w-4xl flex-col items-center overflow-y-auto rounded-[6px] border-2 border-torch-core/75 bg-dungeon-deepest/95 px-3 py-4 sm:px-6 sm:py-7 [@media(max-height:480px)]:py-3"
+        className="modal-pop touch-scroll flex max-h-[calc(100dvh-16px)] w-full max-w-4xl flex-col items-center overflow-y-auto rounded-[6px] border-2 border-torch-core/75 bg-dungeon-deepest/95 px-3 py-4 sm:px-6 sm:py-7 [@media(max-height:480px)]:py-3"
         style={{
           boxShadow:
             "inset 1px 1px 0 rgba(236,226,200,0.12), 0 0 0 2px rgba(0,0,0,0.65), 0 0 44px rgba(255,122,58,0.24), 0 18px 52px rgba(0,0,0,0.78)",

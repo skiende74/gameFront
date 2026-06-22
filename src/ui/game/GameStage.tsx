@@ -8,7 +8,7 @@ import { type ReactNode } from "react";
  */
 export function GameStage({ children }: { children: ReactNode }) {
   return (
-    <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden font-pixel-ko text-bone-white">
+    <div className="game-touch-surface pointer-events-none fixed inset-0 z-40 overflow-hidden font-pixel-ko text-bone-white">
       {children}
     </div>
   );
