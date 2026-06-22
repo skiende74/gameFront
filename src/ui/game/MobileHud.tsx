@@ -117,9 +117,6 @@ export function MobileHud({ snapshot }: Props) {
       <MobileBossHud boss={snapshot.boss} />
       <MobileSynergyPanel rows={snapshot.synergies} />
       <MobileMercBar party={snapshot.party} />
-      <div className="pointer-events-none absolute inset-x-6 top-1/2 hidden -translate-y-1/2 rounded-[6px] border-2 border-torch-core/60 bg-dungeon-deepest/88 px-4 py-3 text-center text-sm text-torch-core shadow-[0_0_0_2px_rgba(0,0,0,0.58)] [@media(orientation:portrait)]:block">
-        가로모드 권장
-      </div>
     </>
   );
 }

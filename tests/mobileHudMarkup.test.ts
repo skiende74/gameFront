@@ -26,7 +26,7 @@ assert.ok(mobileHud.includes("MobileTopHud"));
 assert.ok(mobileHud.includes("MobileBossHud"));
 assert.ok(mobileHud.includes("MobileMercBar"));
 assert.ok(mobileHud.includes("MobileSynergyPanel"));
-assert.ok(mobileHud.includes("가로모드 권장"));
+assert.ok(!mobileHud.includes("가로모드 권장"));
 
 const controls = readFileSync("src/ui/game/MobileControls.tsx", "utf8");
 assert.ok(controls.includes('glyph: "▲"'));
