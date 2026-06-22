@@ -33,14 +33,18 @@ assert.ok(controls.includes('glyph: "▲"'));
 assert.ok(controls.includes('glyph: "◀"'));
 assert.ok(controls.includes('glyph: "▼"'));
 assert.ok(controls.includes('glyph: "▶"'));
-assert.ok(controls.includes("KeyboardEvent"));
-assert.ok(controls.includes("keydown"));
-assert.ok(controls.includes("keyup"));
+assert.ok(controls.includes("emitMobileMove"));
+assert.ok(controls.includes("pressed: true"));
+assert.ok(controls.includes("pressed: false"));
+assert.ok(!controls.includes("KeyboardEvent"));
 assert.ok(controls.includes("GAME_PAUSE_REQUEST_EVENT"));
 
 const events = readFileSync("src/ui/game/hudEvents.ts", "utf8");
 assert.ok(events.includes("GAME_PAUSE_REQUEST_EVENT"));
+assert.ok(events.includes("GAME_MOBILE_MOVE_EVENT"));
 
 const scene = readFileSync("src/game/scenes/DungeonScene.ts", "utf8");
 assert.ok(scene.includes("GAME_PAUSE_REQUEST_EVENT"));
+assert.ok(scene.includes("GAME_MOBILE_MOVE_EVENT"));
+assert.ok(scene.includes("mobileMove"));
 assert.ok(scene.includes("togglePause"));

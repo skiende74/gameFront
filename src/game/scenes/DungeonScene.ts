@@ -42,12 +42,14 @@ import {
   resultSynergiesFromSnapshot,
 } from "../../ui/game/hudSnapshot";
 import {
+  GAME_MOBILE_MOVE_EVENT,
   GAME_PAUSE_REQUEST_EVENT,
   GAME_RESTART_REQUEST_EVENT,
   GAME_RESUME_REQUEST_EVENT,
   emitHudSnapshot,
   emitPauseState,
   emitResultState,
+  type MobileMoveDirection,
 } from "../../ui/game/hudEvents";
 import type { HudBoss, HudResult } from "../../ui/game/hudTypes";
 
@@ -83,6 +85,7 @@ type WasdKeys = {
 };
 
 type Facing = "down" | "up" | "side";
+type MobileMoveState = Record<MobileMoveDirection, boolean>;
 
 export class DungeonScene extends Phaser.Scene {
   private floor!: Phaser.GameObjects.TileSprite;
@@ -100,6 +103,7 @@ export class DungeonScene extends Phaser.Scene {
   private upgradeSelectedHandler?: EventListener;
   private upgradeRerollHandler?: EventListener;
   private devWaveSecHandler?: EventListener;
+  private mobileMoveHandler?: EventListener;
   private pauseRequestHandler?: EventListener;
   private resumeRequestHandler?: EventListener;
   private restartRequestHandler?: EventListener;
@@ -120,6 +124,7 @@ export class DungeonScene extends Phaser.Scene {
   private attacking = false;
   private hurting = false;
   private footOffset = HERO_FRAME.height * TILE_SCALE * 0.42;
+  private mobileMove: MobileMoveState = { up: false, down: false, left: false, right: false };
 
   constructor() {
     super({ key: "DungeonScene" });
@@ -209,6 +214,11 @@ export class DungeonScene extends Phaser.Scene {
     this.restartRequestHandler = () => {
       if (this.gameOver) this.scene.restart();
     };
+    this.mobileMoveHandler = (event) => {
+      const detail = (event as WindowEventMap[typeof GAME_MOBILE_MOVE_EVENT]).detail;
+      this.mobileMove[detail.direction] = detail.pressed;
+    };
+    window.addEventListener(GAME_MOBILE_MOVE_EVENT, this.mobileMoveHandler);
     window.addEventListener(GAME_PAUSE_REQUEST_EVENT, this.pauseRequestHandler);
     window.addEventListener(GAME_RESUME_REQUEST_EVENT, this.resumeRequestHandler);
     window.addEventListener(GAME_RESTART_REQUEST_EVENT, this.restartRequestHandler);
@@ -256,6 +266,7 @@ export class DungeonScene extends Phaser.Scene {
     this.usingClass = false;
     this.attacking = false;
     this.hurting = false;
+    this.mobileMove = { up: false, down: false, left: false, right: false };
     this.physics.world.resume();
   }
 
@@ -378,10 +389,10 @@ export class DungeonScene extends Phaser.Scene {
 
     let dx = 0;
     let dy = 0;
-    if (this.keys.left.isDown || this.keys.a.isDown) dx -= 1;
-    if (this.keys.right.isDown || this.keys.d.isDown) dx += 1;
-    if (this.keys.up.isDown || this.keys.w.isDown) dy -= 1;
-    if (this.keys.down.isDown || this.keys.s.isDown) dy += 1;
+    if (this.keys.left.isDown || this.keys.a.isDown || this.mobileMove.left) dx -= 1;
+    if (this.keys.right.isDown || this.keys.d.isDown || this.mobileMove.right) dx += 1;
+    if (this.keys.up.isDown || this.keys.w.isDown || this.mobileMove.up) dy -= 1;
+    if (this.keys.down.isDown || this.keys.s.isDown || this.mobileMove.down) dy += 1;
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     const moving = dx !== 0 || dy !== 0;
@@ -694,6 +705,10 @@ export class DungeonScene extends Phaser.Scene {
     if (this.devWaveSecHandler) {
       window.removeEventListener(DEV_WAVE_SEC_EVENT, this.devWaveSecHandler);
       this.devWaveSecHandler = undefined;
+    }
+    if (this.mobileMoveHandler) {
+      window.removeEventListener(GAME_MOBILE_MOVE_EVENT, this.mobileMoveHandler);
+      this.mobileMoveHandler = undefined;
     }
     if (this.pauseRequestHandler) {
       window.removeEventListener(GAME_PAUSE_REQUEST_EVENT, this.pauseRequestHandler);

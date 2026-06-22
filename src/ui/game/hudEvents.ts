@@ -3,9 +3,13 @@ import type { GameHudSnapshot, HudResult } from "./hudTypes.ts";
 export const GAME_HUD_EVENT = "game:hud-update";
 export const GAME_PAUSE_EVENT = "game:pause-change";
 export const GAME_PAUSE_REQUEST_EVENT = "game:pause-request";
+export const GAME_MOBILE_MOVE_EVENT = "game:mobile-move";
 export const GAME_RESULT_EVENT = "game:result-change";
 export const GAME_RESUME_REQUEST_EVENT = "game:resume-request";
 export const GAME_RESTART_REQUEST_EVENT = "game:restart-request";
+
+export type MobileMoveDirection = "up" | "down" | "left" | "right";
+export type MobileMovePayload = { direction: MobileMoveDirection; pressed: boolean };
 
 type DispatchTarget = Pick<EventTarget, "dispatchEvent">;
 
@@ -15,6 +19,10 @@ export function emitHudSnapshot(target: DispatchTarget, snapshot: GameHudSnapsho
 
 export function emitPauseState(target: DispatchTarget, paused: boolean): void {
   target.dispatchEvent(new CustomEvent(GAME_PAUSE_EVENT, { detail: paused }));
+}
+
+export function emitMobileMove(target: DispatchTarget, detail: MobileMovePayload): void {
+  target.dispatchEvent(new CustomEvent(GAME_MOBILE_MOVE_EVENT, { detail }));
 }
 
 export function emitResultState(target: DispatchTarget, result: HudResult | null): void {
