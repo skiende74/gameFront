@@ -16,6 +16,6 @@ assert.ok(config.includes('webDir: "dist"'));
 
 assert.ok(existsSync("android/app/src/main/AndroidManifest.xml"));
 const manifest = readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
-assert.ok(manifest.includes('android:screenOrientation="landscape"'));
+assert.ok(!manifest.includes('android:screenOrientation="landscape"'));
 assert.ok(manifest.includes('android:configChanges='));
 assert.ok(manifest.includes("com.dacongame.gamefront.MainActivity"));
