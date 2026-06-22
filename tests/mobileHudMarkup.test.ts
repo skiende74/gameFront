@@ -7,6 +7,9 @@ assert.ok(overlay.includes("useMobileHud"));
 assert.ok(overlay.includes("MobileHud"));
 assert.ok(overlay.includes("MobileControls"));
 assert.ok(overlay.includes("!isMobileHud && <ControlsHint />"));
+assert.ok(overlay.includes("LoadingOverlay"));
+assert.ok(overlay.includes("게임 로딩 중"));
+assert.ok(!overlay.includes("if (!snapshot) return null;"));
 
 assert.ok(existsSync("src/ui/game/useMobileHud.ts"));
 assert.ok(existsSync("src/ui/game/MobileHud.tsx"));

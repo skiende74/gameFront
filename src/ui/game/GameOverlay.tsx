@@ -41,6 +41,20 @@ function ControlsHint() {
   );
 }
 
+function LoadingOverlay() {
+  return (
+    <GameStage>
+      <div className="absolute inset-0 flex items-center justify-center bg-dungeon-deepest/92 px-4 text-center">
+        <div className="rounded-[6px] border-2 border-torch-core/55 bg-dungeon-deepest/92 px-5 py-4 shadow-[0_0_0_2px_rgba(0,0,0,0.58),0_0_30px_rgba(255,122,58,0.2)]">
+          <p className="font-pixel-en text-[13px] text-torch-core">LOADING</p>
+          <p className="mt-2 text-sm text-bone-white">게임 로딩 중</p>
+          <p className="mt-1 text-[11px] text-ash-grey">잠시만 기다려 주세요</p>
+        </div>
+      </div>
+    </GameStage>
+  );
+}
+
 export function GameOverlay() {
   const [snapshot, setSnapshot] = useState<GameHudSnapshot | null>(null);
   const [paused, setPaused] = useState(false);
@@ -62,7 +76,7 @@ export function GameOverlay() {
     };
   }, []);
 
-  if (!snapshot) return null;
+  if (!snapshot) return <LoadingOverlay />;
 
   return (
     <>
