@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "galmuri/dist/galmuri.css";
 @import "@fontsource/press-start-2p";
+@import "./mobile-browser.css";
 
 @theme {
   --color-dungeon-deepest: #050309;
@@ -36,7 +37,9 @@ body,
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  height: var(--game-viewport-height);
+  min-height: var(--game-viewport-height);
+  max-height: var(--game-viewport-height);
   background-color: var(--color-dungeon-deepest);
   color: var(--color-bone-white);
   font-family: var(--font-pixel-ko);

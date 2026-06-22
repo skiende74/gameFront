@@ -1,0 +1,20 @@
+{
+  "name": "10분 용병단",
+  "short_name": "용병단",
+  "description": "10분 동안 동료를 빌드하는 자동전투 생존 미니게임",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#050309",
+  "theme_color": "#050309",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

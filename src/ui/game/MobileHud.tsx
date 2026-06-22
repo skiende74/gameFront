@@ -20,7 +20,7 @@ export function MobileTopHud({ snapshot }: Props) {
   const hpColor = danger ? "bg-blood-red" : snapshot.hp.ratio < 0.6 ? "bg-torch-core" : "bg-class-bow";
 
   return (
-    <section className={`absolute left-2 right-2 top-2 rounded-[6px] border-2 border-bone-white/35 bg-dungeon-deepest/88 px-2 py-1.5 shadow-[0_0_0_2px_rgba(0,0,0,0.58),0_8px_24px_rgba(0,0,0,0.45)] ${danger ? "hp-danger" : ""}`}>
+    <section className={`absolute left-2 right-2 top-[calc(env(safe-area-inset-top)+8px)] rounded-[6px] border-2 border-bone-white/35 bg-dungeon-deepest/88 px-2 py-1.5 shadow-[0_0_0_2px_rgba(0,0,0,0.58),0_8px_24px_rgba(0,0,0,0.45)] ${danger ? "hp-danger" : ""}`}>
       <div className="flex items-center gap-2 text-[11px]">
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
           <PixelIcon name="heart" className={`h-3 w-3 text-blood-red ${danger ? "heart-beat" : ""}`} />
@@ -45,7 +45,7 @@ export function MobileBossHud({ boss }: { boss: GameHudSnapshot["boss"] }) {
   if (!boss) return null;
 
   return (
-    <section className="absolute left-3 right-3 top-[68px] rounded-[6px] border-2 border-blood-red/75 bg-dungeon-deepest/88 px-2 py-1.5 text-center shadow-[0_0_0_2px_rgba(0,0,0,0.58),0_0_22px_rgba(196,30,30,0.28)]">
+    <section className="absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+68px)] rounded-[6px] border-2 border-blood-red/75 bg-dungeon-deepest/88 px-2 py-1.5 text-center shadow-[0_0_0_2px_rgba(0,0,0,0.58),0_0_22px_rgba(196,30,30,0.28)]">
       <div className="mb-1 truncate text-[11px] text-[#ff7a6b]">{boss.name}</div>
       <div className="h-2.5 rounded-[3px] bg-dungeon-mid">
         <div className="h-full rounded-[2px] bg-blood-red" style={{ width: `${boss.ratio * 100}%` }} />
@@ -90,7 +90,7 @@ export function MobileSynergyPanel({ rows }: { rows: GameHudSnapshot["synergies"
 
   return (
     <>
-      <button type="button" onClick={() => setOpen((prev) => !prev)} className="pointer-events-auto absolute right-2 top-[76px] rounded-[5px] border border-rune-violet/55 bg-dungeon-deepest/82 px-2 py-1.5 text-[11px] text-rune-violet shadow-[0_0_0_2px_rgba(0,0,0,0.48)]">
+      <button type="button" onClick={() => setOpen((prev) => !prev)} className="pointer-events-auto absolute right-2 top-[calc(env(safe-area-inset-top)+76px)] rounded-[5px] border border-rune-violet/55 bg-dungeon-deepest/82 px-2 py-1.5 text-[11px] text-rune-violet shadow-[0_0_0_2px_rgba(0,0,0,0.48)]">
         시너지 {rows.filter((row) => row.active).length}/{rows.length}
       </button>
       {open && (

@@ -47,7 +47,7 @@ export function PhaserGame({ classId, tutorial = false, devMode = false, devWave
   );
 
   return (
-    <div className="game-touch-surface game-canvas-surface fixed inset-0 flex items-center justify-center bg-dungeon-deepest">
+    <div className="game-touch-surface game-canvas-surface game-viewport fixed inset-0 flex items-center justify-center bg-dungeon-deepest">
       <div ref={mountGame} className="game-canvas-surface h-full w-full" />
     </div>
   );

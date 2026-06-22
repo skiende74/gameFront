@@ -4,6 +4,7 @@ import { MercBar } from "./MercBar.tsx";
 import { SynergyPanel } from "./SynergyPanel.tsx";
 import { MobileControls } from "./MobileControls.tsx";
 import { MobileHud } from "./MobileHud.tsx";
+import { MobileUtilityButtons } from "./MobileUtilityButtons.tsx";
 import { GameStage } from "./GameStage.tsx";
 import { PauseOverlay, ResultOverlay } from "./GameModals.tsx";
 import { useMobileHud } from "./useMobileHud.ts";
@@ -84,6 +85,7 @@ export function GameOverlay() {
         {isMobileHud ? (
           <>
             <MobileHud snapshot={snapshot} />
+            <MobileUtilityButtons />
             <MobileControls />
           </>
         ) : (
